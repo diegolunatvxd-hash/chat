@@ -15,12 +15,10 @@ const usuariosActivos = {};
 
 io.on('connection', (socket) => {
 
-  // Unirse a sala y validar si es Admin
   socket.on('unirse_sala', (data) => {
     const { sala, usuario } = data;
     if (socket.salaActual) socket.leave(socket.salaActual);
 
-    // Detección de clave secreta del Admin
     const esAdmin = usuario && usuario.startsWith('1234567890adminnn_');
     const nombreLimpio = esAdmin ? usuario.replace('1234567890adminnn_', '') : (usuario || 'Anónimo');
 
@@ -33,23 +31,18 @@ io.on('connection', (socket) => {
     if (!historialSalas[socket.salaActual]) historialSalas[socket.salaActual] = [];
     if (estadoBloqueoSalas[socket.salaActual] === undefined) estadoBloqueoSalas[socket.salaActual] = false;
 
-    // Enviar estado de la sala al usuario que entra
     socket.emit('cargar_historial', historialSalas[socket.salaActual]);
     socket.emit('estado_bloqueo', { bloqueado: estadoBloqueoSalas[socket.salaActual] });
   });
 
-  // Evento de Admin: Alternar Bloqueo de Chat
   socket.on('toggle_bloqueo', () => {
     const sala = socket.salaActual || 'global';
-    
     if (socket.userData && socket.userData.esAdmin) {
       estadoBloqueoSalas[sala] = !estadoBloqueoSalas[sala];
       const bloqueado = estadoBloqueoSalas[sala];
 
-      // Notificar a todos el estado del bloqueo
       io.to(sala).emit('estado_bloqueo', { bloqueado });
 
-      // Mensaje de sistema en el chat
       const avisoSistema = {
         tipo: 'sistema',
         msgId: 'sys_' + Date.now(),
@@ -61,7 +54,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Gestión de usuarios conectados (Llamadas)
+  /* GESTIÓN Y SEÑALIZACIÓN WEBRTC (AUDIO & VIDEO) */
   socket.on('obtener_usuarios', () => {
     const salaUsers = Object.values(usuariosActivos).filter(u => u.sala === socket.salaActual);
     socket.emit('lista_usuarios', salaUsers);
@@ -70,7 +63,8 @@ io.on('connection', (socket) => {
   socket.on('solicitar_llamada', (data) => {
     io.to(data.destinoId).emit('recibir_llamada', {
       emisorId: socket.id,
-      emisorNombre: data.emisorNombre
+      emisorNombre: data.emisorNombre,
+      conVideo: data.conVideo
     });
   });
 
@@ -81,11 +75,15 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Recepción y retransmisión de mensajes
+  socket.on('webrtc_signal', (data) => {
+    io.to(data.destinoId).emit('webrtc_signal', {
+      emisorId: socket.id,
+      signal: data.signal
+    });
+  });
+
   socket.on('chat_message', (data) => {
     const sala = socket.salaActual || 'global';
-    
-    // Si la sala está bloqueada, rechazar mensajes de usuarios normales
     if (estadoBloqueoSalas[sala] && !data.esAdmin) return;
 
     data.msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
@@ -97,7 +95,6 @@ io.on('connection', (socket) => {
     io.to(sala).emit('chat_message', data);
   });
 
-  // Eliminar mensaje (Permitido para el creador o para el Admin)
   socket.on('eliminar_mensaje', (data) => {
     const sala = socket.salaActual || 'global';
     if (!historialSalas[sala]) return;
@@ -118,4 +115,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => console.log(`Servidor escuchando en el puerto ${PORT}`));
+http.listen(PORT, () => console.log(`Servidor iniciado en puerto ${PORT}`));
