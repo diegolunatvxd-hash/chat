@@ -3,12 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat Cristal WA Pro - Ultra</title>
+  <title>Chat Cristal WA Pro - Ultra Max</title>
   <style>
+    :root {
+      --bg-gradient: linear-gradient(-45deg, #050b14, #101f2c, #0a1724, #1a2c38);
+      --glass-bg: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --accent-color: #00f2fe;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       margin: 0; padding: 0;
-      background: linear-gradient(-45deg, #050b14, #101f2c, #0a1724, #1a2c38);
+      background: var(--bg-gradient);
       background-size: 400% 400%;
       animation: gradientBG 15s ease infinite;
       display: flex; flex-direction: column; height: 100vh; color: #e9edef;
@@ -24,43 +31,44 @@
     header {
       background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(25px) saturate(180%);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--glass-border);
+      padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
       z-index: 10;
     }
 
     header h2 { margin: 0; font-size: 1.1rem; }
-    .badge-sala { font-size: 0.75rem; background: rgba(0, 242, 254, 0.2); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(0,242,254,0.4); margin-left: 8px; }
+    .badge-sala { font-size: 0.75rem; background: rgba(0, 242, 254, 0.2); padding: 4px 8px; border-radius: 8px; border: 1px solid var(--accent-color); margin-left: 8px; }
 
+    /* Modales */
     .modal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(15px);
+      background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(15px);
       display: flex; justify-content: center; align-items: center; z-index: 100;
     }
 
     .modal-contenido {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.03) 100%);
       backdrop-filter: blur(30px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      padding: 22px; border-radius: 24px; width: 85%; max-width: 360px;
+      border: 1px solid var(--glass-border);
+      padding: 22px; border-radius: 24px; width: 85%; max-width: 380px;
       display: flex; flex-direction: column; gap: 10px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
       max-height: 90vh; overflow-y: auto;
     }
 
     .modal-input, .modal-select {
-      padding: 10px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 10px; border-radius: 12px; border: 1px solid var(--glass-border);
       background: rgba(0, 0, 0, 0.25); color: #e9edef; font-size: 0.9rem; outline: none;
     }
 
     .btn-principal {
       background: linear-gradient(135deg, rgba(0, 168, 132, 0.8) 0%, rgba(0, 200, 150, 0.6) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      border: 1px solid var(--glass-border);
       color: white; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; text-align: center;
     }
 
     .btn-secundario {
-      background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.08); color: white; border: 1px solid var(--glass-border);
       padding: 8px; border-radius: 10px; cursor: pointer; font-size: 0.85rem; text-align: center;
     }
 
@@ -72,105 +80,110 @@
     /* Mensajes */
     .mensaje {
       max-width: 75%; padding: 12px 16px; font-size: 0.95rem; word-wrap: break-word;
-      backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(20px); border: 1px solid var(--glass-border);
       position: relative; transition: transform 0.2s;
     }
 
     .mensaje-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
     .usuario-info { display: flex; align-items: center; gap: 6px; }
-    .avatar-mini { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+    .avatar-mini { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent-color); }
     .usuario-nombre { font-size: 0.75rem; font-weight: bold; }
     
-    .btn-borrar {
-      background: none; border: none; color: rgba(255, 255, 255, 0.5);
-      cursor: pointer; font-size: 0.8rem; padding: 0 4px;
-    }
+    .btn-borrar { background: none; border: none; color: rgba(255, 255, 255, 0.5); cursor: pointer; font-size: 0.8rem; }
     .btn-borrar:hover { color: #ff4d4d; }
 
     .mensaje.enviado { align-self: flex-end; border-radius: 20px 20px 4px 20px; }
     .mensaje.recibido { align-self: flex-start; border-radius: 20px 20px 20px 4px; }
 
-    /* Mensaje del sistema (Bloqueos/Avisos) */
     .mensaje-sistema {
       align-self: center; background: rgba(0, 0, 0, 0.4);
       border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px;
       padding: 6px 14px; font-size: 0.8rem; color: #ffd700; text-align: center; margin: 6px 0;
     }
 
-    .mensaje img.foto-preview { max-width: 250px; border-radius: 14px; cursor: pointer; display: block; }
-
-    /* Audios */
-    audio { outline: none; border-radius: 12px; max-width: 240px; height: 40px; }
-
-    /* Encuestas */
-    .encuesta-box { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.15); padding: 12px; border-radius: 14px; min-width: 220px; }
-    .encuesta-opcion {
-      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px 12px; margin: 6px 0; border-radius: 10px; cursor: pointer; transition: background 0.2s;
+    /* Imagen Preview */
+    .mensaje img.foto-preview {
+      max-width: 250px; border-radius: 14px; cursor: pointer; display: block;
+      transition: transform 0.2s; border: 1px solid var(--glass-border);
     }
-    .encuesta-opcion:hover { background: rgba(255,255,255,0.18); }
+    .mensaje img.foto-preview:hover { transform: scale(1.02); }
+
+    /* REPRODUCTOR AUDIO CRISTAL DE LUJO */
+    .audio-cristal-box {
+      display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 18px; padding: 8px 12px;
+      min-width: 220px; backdrop-filter: blur(15px);
+    }
+    .btn-audio-play {
+      background: var(--accent-color); color: #000; border: none; width: 34px; height: 34px;
+      border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-weight: bold;
+    }
+    .audio-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .audio-progress { width: 100%; height: 5px; background: rgba(255,255,255,0.2); border-radius: 5px; cursor: pointer; position: relative; }
+    .audio-bar { width: 0%; height: 100%; background: var(--accent-color); border-radius: 5px; }
+    .audio-tiempo { font-size: 0.65rem; color: #aebac1; display: flex; justify-content: space-between; }
+    .btn-download-icon { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; opacity: 0.8; }
+    .btn-download-icon:hover { opacity: 1; transform: scale(1.1); }
+
+    /* FULLSCREEN IMAGE MODAL */
+    #modal-fullscreen-img {
+      display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(20px); z-index: 1000;
+      flex-direction: column; justify-content: center; align-items: center;
+    }
+    #modal-fullscreen-img img { max-width: 90vw; max-height: 80vh; border-radius: 16px; border: 1px solid var(--glass-border); }
+    .btn-cerrar-fs { position: absolute; top: 20px; right: 25px; font-size: 2rem; color: white; cursor: pointer; }
+    .btn-descargar-fs { margin-top: 15px; padding: 10px 20px; border-radius: 12px; background: var(--accent-color); color: #000; font-weight: bold; text-decoration: none; }
+
+    /* Encuestas y Reacciones */
+    .encuesta-box { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.15); padding: 12px; border-radius: 14px; min-width: 220px; }
+    .encuesta-opcion { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; margin: 6px 0; border-radius: 10px; cursor: pointer; }
     .votantes-lista { font-size: 0.7rem; color: #aebac1; margin-top: 3px; display: block; }
 
-    /* Barra de Reacciones flotantes */
-    .reacciones-contenedor {
-      display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;
-    }
-    .badge-reaccion {
-      background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 12px; padding: 2px 6px; font-size: 0.75rem; cursor: pointer;
-      display: flex; align-items: center; gap: 3px;
-    }
+    .reacciones-contenedor { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+    .badge-reaccion { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 2px 6px; font-size: 0.75rem; cursor: pointer; }
 
-    /* Selector de Emojis flotante */
-    .picker-emojis {
-      display: none; position: absolute; top: -35px; right: 0;
-      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px);
-      border-radius: 20px; padding: 4px 8px; gap: 6px; border: 1px solid rgba(255,255,255,0.3);
-    }
+    .picker-emojis { display: none; position: absolute; top: -35px; right: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); border-radius: 20px; padding: 4px 8px; gap: 6px; border: 1px solid rgba(255,255,255,0.3); }
     .mensaje:hover .picker-emojis { display: flex; }
-    .btn-emoji-pick { background: none; border: none; cursor: pointer; font-size: 1rem; transition: transform 0.1s; }
-    .btn-emoji-pick:hover { transform: scale(1.3); }
+    .btn-emoji-pick { background: none; border: none; cursor: pointer; font-size: 1rem; }
 
-    /* Animación Emoji Flotante */
-    @keyframes animarEmojiFlotante {
-      0% { transform: translateY(0) scale(0.5); opacity: 1; }
-      50% { transform: translateY(-40px) scale(1.5) rotate(15deg); opacity: 0.9; }
-      100% { transform: translateY(-80px) scale(1) rotate(-15deg); opacity: 0; }
-    }
-    .emoji-animado-flotante {
-      position: absolute; font-size: 2rem; pointer-events: none;
-      animation: animarEmojiFlotante 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-      z-index: 50;
-    }
-
-    #barra-entrada {
-      background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px);
-      padding: 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
+    #barra-entrada { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px); padding: 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--glass-border); }
     .btn-icono { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #aebac1; }
     .btn-icono.grabando { color: #ff4d4d; animation: pulsoGrabando 1s infinite; }
 
-    @keyframes pulsoGrabando {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.2); }
-      100% { transform: scale(1); }
-    }
+    @keyframes pulsoGrabando { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 
-    #input { flex: 1; padding: 10px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0, 0, 0, 0.3); color: #e9edef; outline: none; }
-    #input:disabled { background: rgba(0, 0, 0, 0.6); color: #ff6b6b; cursor: not-allowed; }
+    #input { flex: 1; padding: 10px 16px; border-radius: 20px; border: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.3); color: #e9edef; outline: none; }
+    
+    /* MODAL LLAMADA */
+    #modal-llamada { display: none; position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.85); backdrop-filter: blur(20px); border: 1px solid var(--accent-color); border-radius: 18px; padding: 16px; z-index: 500; color: white; width: 260px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+    .btn-call { padding: 8px 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
 
-    #banner-despertando {
-      display: none; background: #ff9800; color: #000; text-align: center; padding: 8px; font-size: 0.85rem; font-weight: bold;
-    }
+    #banner-despertando { display: none; background: #ff9800; color: #000; text-align: center; padding: 8px; font-size: 0.85rem; font-weight: bold; }
   </style>
 </head>
 <body>
 
-  <!-- Audio de Notificación Local -->
   <audio id="audio-notificacion" src="alarm_A5GlMHT.mp3" preload="auto"></audio>
 
-  <div id="banner-despertando">⚠️ Conectando al servidor gratuito de Render... (<span id="contador">50</span>s)</div>
+  <div id="banner-despertando">⚠️ Conectando al servidor... (<span id="contador">50</span>s)</div>
+
+  <!-- MODAL LLAMADA ENTRANTE / EN CURSO -->
+  <div id="modal-llamada">
+    <div style="font-weight:bold; margin-bottom:8px;" id="titulo-llamada">📞 Llamada Entrante</div>
+    <div style="font-size:0.85rem; margin-bottom:12px;" id="subtitulo-llamada">Alguien te está llamando...</div>
+    <div style="display:flex; gap:8px;" id="acciones-llamada">
+      <button class="btn-call" style="background:#00c896; color:white;" onclick="aceptarLlamada()">Aceptar</button>
+      <button class="btn-call" style="background:#ff4d4d; color:white;" onclick="colgarLlamada()">Rechazar</button>
+    </div>
+  </div>
+
+  <!-- MODAL FULLSCREEN IMAGEN -->
+  <div id="modal-fullscreen-img">
+    <span class="btn-cerrar-fs" onclick="cerrarImagenFS()">&times;</span>
+    <img id="img-fullscreen-target" src="" alt="Full Resolution" />
+    <a id="btn-download-fs" class="btn-descargar-fs" download="Imagen_Cristal.png">📥 Descargar Imagen</a>
+  </div>
 
   <!-- MODAL PERFIL Y SALA -->
   <div id="modal-usuario" class="modal">
@@ -182,11 +195,19 @@
         <option value="privado">🔒 Sala Privada con Código</option>
       </select>
       <input type="text" id="codigo-sala-input" class="modal-input" placeholder="Código de Sala (ej. 1234)" style="display:none;" />
+      <label style="font-size:0.8rem;">Color de burbuja:</label>
       <input type="color" id="color-input" style="width:100%; height:35px; border:none; cursor:pointer;" value="#005c4b" />
       <input type="file" id="foto-perfil-input" accept="image/*" class="modal-input" />
+
+      <label style="font-size:0.8rem;">Tema de Cristal (Función Única):</label>
+      <select id="tema-select" class="modal-select" onchange="cambiarTema(this.value)">
+        <option value="azul">🔷 Cristal Neón Azul</option>
+        <option value="rosa">💖 Cristal Neón Rosa</option>
+        <option value="esmeralda">🟢 Cristal Esmeralda</option>
+      </select>
       
       <div style="display:flex; gap:6px; margin-top:5px;">
-        <button class="btn-secundario" style="flex:1;" onclick="exportarPerfil()">💾 Exportar Perfil</button>
+        <button class="btn-secundario" style="flex:1;" onclick="exportarPerfil()">💾 Exportar</button>
         <button class="btn-secundario" style="flex:1;" onclick="document.getElementById('file-import-perfil').click()">📂 Importar</button>
         <input type="file" id="file-import-perfil" accept=".json" style="display:none;" onchange="importarPerfil(this)" />
       </div>
@@ -206,13 +227,21 @@
       </div>
       <button class="btn-secundario" onclick="agregarOpcionInput()">+ Agregar Opción</button>
       
-      <label style="font-size:0.85rem; display:flex; align-items:center; gap:8px; margin-top:5px; cursor:pointer;">
-        <input type="checkbox" id="encuesta-mostrar-nombres" checked />
-        Mostrar quién votó (Nombres públicos)
+      <label style="font-size:0.85rem; display:flex; align-items:center; gap:8px; cursor:pointer;">
+        <input type="checkbox" id="encuesta-mostrar-nombres" checked /> Mostrar quién votó
       </label>
 
       <button class="btn-principal" onclick="enviarEncuesta()">Publicar Encuesta</button>
       <button class="btn-secundario" style="background:#cc0000;" onclick="cerrarModalEncuesta()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- MODAL MIEMBROS Y LLAMADAS -->
+  <div id="modal-miembros" class="modal" style="display:none;">
+    <div class="modal-contenido">
+      <h3>Usuarios Conectados</h3>
+      <div id="lista-usuarios-conectados" style="display:flex; flex-direction:column; gap:8px;"></div>
+      <button class="btn-secundario" onclick="cerrarModalMiembros()">Cerrar</button>
     </div>
   </div>
 
@@ -223,8 +252,9 @@
     </div>
     <div>
       <button id="btn-admin-bloqueo" class="btn-secundario btn-admin" style="display:none;" onclick="toggleBloqueoAdmin()">🔒 Bloquear Chat</button>
-      <button class="btn-icono" onclick="abrirModalPerfil()">👤</button>
-      <button class="btn-icono" onclick="abrirModalEncuesta()">📊</button>
+      <button class="btn-icono" title="Llamar / Miembros" onclick="abrirModalMiembros()">📞</button>
+      <button class="btn-icono" title="Perfil" onclick="abrirModalPerfil()">👤</button>
+      <button class="btn-icono" title="Encuesta" onclick="abrirModalEncuesta()">📊</button>
     </div>
   </header>
 
@@ -233,17 +263,14 @@
   </div>
 
   <div id="barra-entrada">
-    <!-- Subir Imagen -->
     <label class="btn-icono" title="Subir Imagen">📷
       <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="enviarArchivo(this, 'foto')" />
     </label>
 
-    <!-- Subir Audio desde el Sistema -->
     <label class="btn-icono" title="Subir Audio">🎵
       <input type="file" id="input-audio-file" accept="audio/*" style="display:none;" onchange="enviarArchivo(this, 'audio')" />
     </label>
 
-    <!-- Grabar Audio con Micrófono -->
     <button id="btn-mic" class="btn-icono" title="Grabar Audio" onclick="alternarGrabacion()">🎙️</button>
 
     <input id="input" autocomplete="off" placeholder="Escribe un mensaje..." />
@@ -253,44 +280,28 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io({ transports: ['websocket'], upgrade: false });
-    let usuarioRaw = '';
-    let usuarioNombre = 'Anónimo';
-    let usuarioColor = '#005c4b';
-    let usuarioFoto = '';
-    let esAdmin = false;
-    let salaActual = 'global';
-    let chatBloqueado = false;
+    let usuarioRaw = '', usuarioNombre = 'Anónimo', usuarioColor = '#005c4b', usuarioFoto = '', esAdmin = false, salaActual = 'global';
+    let mediaRecorder, audioChunks = [], grabando = false;
+    let usuariosConectados = [];
 
-    // Variables Grabadora de Voz
-    let mediaRecorder;
-    let audioChunks = [];
-    let grabando = false;
-
-    // Sonido de Notificación usando el archivo local alarm_A5GlMHT.mp3
     function reproducirSonidoNotificacion() {
       const audio = document.getElementById('audio-notificacion');
-      if (audio) {
-        audio.currentTime = 0;
-        audio.play().catch(e => console.log("El navegador requiere interacción previa para reproducir audio."));
-      }
+      if (audio) { audio.currentTime = 0; audio.play().catch(() => {}); }
     }
 
-    // Contador Render despertando
-    let tiempoRestante = 50;
-    let intervaloConexion = setInterval(() => {
-      if (!socket.connected) {
-        document.getElementById('banner-despertando').style.display = 'block';
-        if (tiempoRestante > 0) {
-          tiempoRestante--;
-          document.getElementById('contador').innerText = tiempoRestante;
-        }
+    // Temas Cristal Únicos
+    function cambiarTema(tema) {
+      if (tema === 'rosa') {
+        document.documentElement.style.setProperty('--bg-gradient', 'linear-gradient(-45deg, #1f0518, #2c102b, #240a23, #381a37)');
+        document.documentElement.style.setProperty('--accent-color', '#ff007f');
+      } else if (tema === 'esmeralda') {
+        document.documentElement.style.setProperty('--bg-gradient', 'linear-gradient(-45deg, #021a12, #082d21, #042419, #0d3d2e)');
+        document.documentElement.style.setProperty('--accent-color', '#00ff88');
+      } else {
+        document.documentElement.style.setProperty('--bg-gradient', 'linear-gradient(-45deg, #050b14, #101f2c, #0a1724, #1a2c38)');
+        document.documentElement.style.setProperty('--accent-color', '#00f2fe');
       }
-    }, 1000);
-
-    socket.on('connect', () => {
-      clearInterval(intervaloConexion);
-      document.getElementById('banner-despertando').style.display = 'none';
-    });
+    }
 
     function toggleCodigoPrivado() {
       const tipo = document.getElementById('tipo-sala-select').value;
@@ -310,112 +321,140 @@
       usuarioNombre = esAdmin ? usuarioRaw.replace('1234567890adminnn_', '') : usuarioRaw || 'Anónimo';
 
       document.getElementById('btn-admin-bloqueo').style.display = esAdmin ? 'inline-block' : 'none';
+      salaActual = (tipoSala === 'privado' && codigoSala !== '') ? 'privada_' + codigoSala : 'global';
+      document.getElementById('badge-sala').innerText = salaActual === 'global' ? '🌐 Global' : `🔒 Sala: ${codigoSala}`;
 
-      if (tipoSala === 'privado' && codigoSala !== '') {
-        salaActual = 'privada_' + codigoSala;
-        document.getElementById('badge-sala').innerText = `🔒 Sala: ${codigoSala}`;
-      } else {
-        salaActual = 'global';
-        document.getElementById('badge-sala').innerText = '🌐 Global';
-      }
-
-      const conectarASala = () => {
-        socket.emit('unirse_sala', { sala: salaActual, usuario: usuarioRaw });
+      const conectar = () => {
+        socket.emit('unirse_sala', { sala: salaActual, usuario: usuarioNombre, esAdmin });
         document.getElementById('modal-usuario').style.display = 'none';
       };
 
       if (fotoFile) {
         const reader = new FileReader();
-        reader.onload = (e) => { usuarioFoto = e.target.result; conectarASala(); };
+        reader.onload = (e) => { usuarioFoto = e.target.result; conectar(); };
         reader.readAsDataURL(fotoFile);
+      } else { conectar(); }
+    }
+
+    /* SISTEMA DE LLAMADAS */
+    function abrirModalMiembros() {
+      document.getElementById('modal-miembros').style.display = 'flex';
+      socket.emit('obtener_usuarios');
+    }
+    function cerrarModalMiembros() { document.getElementById('modal-miembros').style.display = 'none'; }
+
+    socket.on('lista_usuarios', (lista) => {
+      const cont = document.getElementById('lista-usuarios-conectados');
+      cont.innerHTML = '';
+      lista.forEach(u => {
+        if(u.id !== socket.id) {
+          const div = document.createElement('div');
+          div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:10px;';
+          div.innerHTML = `<span>${u.nombre}</span> <button class="btn-principal" onclick="iniciarLlamada('${u.id}', '${u.nombre}')">📞 Llamar</button>`;
+          cont.appendChild(div);
+        }
+      });
+      if(cont.innerHTML === '') cont.innerHTML = '<div style="font-size:0.85rem; color:#aaa;">No hay otros usuarios conectados.</div>';
+    });
+
+    let idLlamadaEntrante = null;
+    function iniciarLlamada(destinoId, nombre) {
+      cerrarModalMiembros();
+      document.getElementById('modal-llamada').style.display = 'block';
+      document.getElementById('titulo-llamada').innerText = '📞 Llamando...';
+      document.getElementById('subtitulo-llamada').innerText = `Llamando a ${nombre}`;
+      document.getElementById('acciones-llamada').innerHTML = `<button class="btn-call" style="background:#ff4d4d; color:white; width:100%;" onclick="colgarLlamada()">Cancelar</button>`;
+      socket.emit('solicitar_llamada', { destinoId, emisorNombre: usuarioNombre });
+    }
+
+    socket.on('recibir_llamada', (data) => {
+      reproducirSonidoNotificacion();
+      idLlamadaEntrante = data.emisorId;
+      document.getElementById('modal-llamada').style.display = 'block';
+      document.getElementById('titulo-llamada').innerText = '📞 Llamada Entrante';
+      document.getElementById('subtitulo-llamada').innerText = `${data.emisorNombre} te está llamando...`;
+      document.getElementById('acciones-llamada').innerHTML = `
+        <button class="btn-call" style="background:#00c896; color:white;" onclick="aceptarLlamada()">Aceptar</button>
+        <button class="btn-call" style="background:#ff4d4d; color:white;" onclick="colgarLlamada()">Rechazar</button>`;
+    });
+
+    function aceptarLlamada() {
+      document.getElementById('titulo-llamada').innerText = '🎙️ En Llamada';
+      document.getElementById('subtitulo-llamada').innerText = 'Llamada conectada en tiempo real';
+      document.getElementById('acciones-llamada').innerHTML = `<button class="btn-call" style="background:#ff4d4d; color:white; width:100%;" onclick="colgarLlamada()">Finalizar</button>`;
+      socket.emit('responder_llamada', { destinoId: idLlamadaEntrante, aceptada: true });
+    }
+
+    function colgarLlamada() {
+      document.getElementById('modal-llamada').style.display = 'none';
+      if(idLlamadaEntrante) socket.emit('responder_llamada', { destinoId: idLlamadaEntrante, aceptada: false });
+    }
+
+    socket.on('respuesta_llamada', (data) => {
+      if(data.aceptada) {
+        document.getElementById('titulo-llamada').innerText = '🎙️ En Llamada';
+        document.getElementById('subtitulo-llamada').innerText = 'Llamada conectada en tiempo real';
       } else {
-        conectarASala();
-      }
-    }
-
-    // Exportar e Importar Perfil
-    function exportarPerfil() {
-      const perfilData = {
-        nombre: document.getElementById('nombre-input').value,
-        color: document.getElementById('color-input').value,
-        foto: usuarioFoto
-      };
-      const blob = new Blob([JSON.stringify(perfilData)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `Perfil_${perfilData.nombre || 'usuario'}.json`;
-      a.click();
-    }
-
-    function importarPerfil(input) {
-      if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const data = JSON.parse(e.target.result);
-            if (data.nombre) document.getElementById('nombre-input').value = data.nombre;
-            if (data.color) document.getElementById('color-input').value = data.color;
-            if (data.foto) usuarioFoto = data.foto;
-            alert("Perfil cargado con éxito.");
-          } catch(err) { alert("Archivo de perfil no válido."); }
-        };
-        reader.readAsText(input.files[0]);
-      }
-    }
-
-    function toggleBloqueoAdmin() {
-      if (esAdmin) socket.emit('toggle_bloqueo');
-    }
-
-    socket.on('estado_bloqueo', (data) => {
-      chatBloqueado = data.bloqueado;
-      const input = document.getElementById('input');
-      const btnEnviar = document.getElementById('btn-enviar');
-      const inputFoto = document.getElementById('input-foto');
-      const btnMic = document.getElementById('btn-mic');
-
-      if (chatBloqueado && !esAdmin) {
-        input.value = '';
-        input.placeholder = 'El admin ha bloqueado el lugar🔒';
-        input.disabled = true;
-        btnEnviar.disabled = true;
-        inputFoto.disabled = true;
-        btnMic.disabled = true;
-      } else {
-        input.placeholder = 'Escribe un mensaje...';
-        input.disabled = false;
-        btnEnviar.disabled = false;
-        inputFoto.disabled = false;
-        btnMic.disabled = false;
+        alert("Llamada rechazada o cancelada.");
+        document.getElementById('modal-llamada').style.display = 'none';
       }
     });
 
+    /* REPRODUCTOR FULLSCREEN IMAGEN */
+    function verImagenFS(src) {
+      document.getElementById('img-fullscreen-target').src = src;
+      document.getElementById('btn-download-fs').href = src;
+      document.getElementById('modal-fullscreen-img').style.display = 'flex';
+    }
+    function cerrarImagenFS() { document.getElementById('modal-fullscreen-img').style.display = 'none'; }
+
+    /* REPRODUCTOR AUDIO CRISTAL */
+    function togglePlayAudio(btn, audioId) {
+      const audio = document.getElementById(audioId);
+      const bar = document.getElementById('bar_' + audioId);
+      const txt = document.getElementById('txt_' + audioId);
+
+      if (audio.paused) {
+        audio.play();
+        btn.innerText = '⏸';
+      } else {
+        audio.pause();
+        btn.innerText = '▶';
+      }
+
+      audio.ontimeupdate = () => {
+        const pct = (audio.currentTime / audio.duration) * 100;
+        bar.style.width = pct + '%';
+        txt.innerText = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration || 0)}`;
+      };
+      audio.onended = () => { btn.innerText = '▶'; bar.style.width = '0%'; };
+    }
+
+    function fmtTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${m}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+
+    /* MENSAJES Y CHAT */
     function enviarTexto() {
       const texto = document.getElementById('input').value.trim();
       if (texto) {
-        socket.emit('chat_message', {
-          tipo: 'texto', texto, id: socket.id,
-          nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin
-        });
+        socket.emit('chat_message', { tipo: 'texto', texto, id: socket.id, nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin });
         document.getElementById('input').value = '';
       }
     }
 
     function enviarArchivo(input, tipo) {
       if (input.files && input.files[0]) {
-        const file = input.files[0];
         const reader = new FileReader();
         reader.onload = (e) => {
-          socket.emit('chat_message', {
-            tipo, contenido: e.target.result, id: socket.id,
-            nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin
-          });
+          socket.emit('chat_message', { tipo, contenido: e.target.result, id: socket.id, nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin });
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(input.files[0]);
       }
     }
 
-    // Lógica para Grabar Audio con el Micrófono
     async function alternarGrabacion() {
       const btnMic = document.getElementById('btn-mic');
       if (!grabando) {
@@ -423,230 +462,86 @@
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
           mediaRecorder = new MediaRecorder(stream);
           audioChunks = [];
-
           mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
           mediaRecorder.onstop = () => {
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
             const reader = new FileReader();
             reader.onload = (e) => {
-              socket.emit('chat_message', {
-                tipo: 'audio', contenido: e.target.result, id: socket.id,
-                nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin
-              });
+              socket.emit('chat_message', { tipo: 'audio', contenido: e.target.result, id: socket.id, nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin });
             };
             reader.readAsDataURL(audioBlob);
-            stream.getTracks().forEach(track => track.stop());
+            stream.getTracks().forEach(t => t.stop());
           };
-
           mediaRecorder.start();
           grabando = true;
           btnMic.classList.add('grabando');
-          document.getElementById('input').placeholder = "Grabando audio... Haz clic en el micrófono para enviar";
-        } catch (err) {
-          alert("No se pudo acceder al micrófono.");
-        }
+        } catch (err) { alert("Acceso denegado al micrófono."); }
       } else {
         mediaRecorder.stop();
         grabando = false;
         btnMic.classList.remove('grabando');
-        document.getElementById('input').placeholder = "Escribe un mensaje...";
       }
     }
-
-    function abrirModalEncuesta() { document.getElementById('modal-encuesta').style.display = 'flex'; }
-    function cerrarModalEncuesta() { document.getElementById('modal-encuesta').style.display = 'none'; }
-
-    function agregarOpcionInput() {
-      const cont = document.getElementById('contenedor-opciones');
-      if (cont.children.length < 5) {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'modal-input opcion-input';
-        input.placeholder = `Opción ${cont.children.length + 1}`;
-        cont.appendChild(input);
-      }
-    }
-
-    function enviarEncuesta() {
-      const preg = document.getElementById('encuesta-pregunta').value.trim();
-      const opcionesInputs = document.querySelectorAll('.opcion-input');
-      const mostrarNombres = document.getElementById('encuesta-mostrar-nombres').checked;
-      const opciones = [];
-
-      opcionesInputs.forEach(inp => {
-        if (inp.value.trim() !== '') opciones.push({ texto: inp.value.trim(), votantes: [] });
-      });
-
-      if (preg && opciones.length >= 2) {
-        socket.emit('chat_message', {
-          tipo: 'encuesta', encuestaId: 'enc_' + Date.now(),
-          pregunta: preg, opciones, mostrarNombres, id: socket.id,
-          nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin
-        });
-        cerrarModalEncuesta();
-      }
-    }
-
-    function emitirVoto(encuestaId, opcionIndex) {
-      socket.emit('votar_encuesta', { encuestaId, opcionIndex, usuario: usuarioNombre });
-    }
-
-    socket.on('actualizar_voto', (data) => {
-      const box = document.getElementById(data.encuestaId);
-      if (box) {
-        const mostrarNombres = box.getAttribute('data-mostrar-nombres') === 'true';
-        data.opciones.forEach((op, i) => {
-          const listSpan = box.querySelector(`.votantes-op-${i}`);
-          if (listSpan) {
-            const numVotos = op.votantes ? op.votantes.length : 0;
-            if (mostrarNombres) {
-              listSpan.innerText = numVotos > 0 ? `Votos (${numVotos}): ${op.votantes.join(', ')}` : 'Sin votos';
-            } else {
-              listSpan.innerText = `Votos: ${numVotos}`;
-            }
-          }
-        });
-      }
-    });
-
-    // Reacciones
-    function reaccionarMensaje(msgId, emoji) {
-      socket.emit('reaccionar_mensaje', { msgId, emoji, usuario: usuarioNombre });
-    }
-
-    socket.on('actualizar_reacciones', (data) => {
-      const msgEl = document.getElementById(data.msgId);
-      if (msgEl) {
-        let cont = msgEl.querySelector('.reacciones-contenedor');
-        if (!cont) {
-          cont = document.createElement('div');
-          cont.className = 'reacciones-contenedor';
-          msgEl.appendChild(cont);
-        }
-        cont.innerHTML = '';
-        Object.keys(data.reacciones).forEach(emoji => {
-          const votantes = data.reacciones[emoji];
-          if (votantes.length > 0) {
-            const badge = document.createElement('span');
-            badge.className = 'badge-reaccion';
-            badge.innerHTML = `${emoji} ${votantes.length}`;
-            badge.onclick = () => reaccionarMensaje(data.msgId, emoji);
-            cont.appendChild(badge);
-          }
-        });
-
-        // Lanzar animación de emoji flotante
-        const emojiFlotante = document.createElement('div');
-        emojiFlotante.className = 'emoji-animado-flotante';
-        emojiFlotante.innerText = data.emojiReaccionado;
-        emojiFlotante.style.left = (Math.random() * 60 + 20) + '%';
-        emojiFlotante.style.top = '0px';
-        msgEl.appendChild(emojiFlotante);
-
-        setTimeout(() => emojiFlotante.remove(), 1200);
-      }
-    });
-
-    function eliminarMensaje(msgId) {
-      socket.emit('eliminar_mensaje', { msgId });
-    }
-
-    socket.on('mensaje_eliminado', (data) => {
-      const el = document.getElementById(data.msgId);
-      if (el) el.remove();
-    });
 
     socket.on('cargar_historial', (mensajes) => {
-      const lista = document.getElementById('mensajes');
-      lista.innerHTML = '';
+      document.getElementById('mensajes').innerHTML = '';
       mensajes.forEach(m => agregarMensajeAlDOM(m, false));
     });
 
     socket.on('chat_message', (data) => agregarMensajeAlDOM(data, true));
 
-    function agregarMensajeAlDOM(data, reproducirSonido = true) {
+    function agregarMensajeAlDOM(data, sonido = true) {
       const lista = document.getElementById('mensajes');
 
-      // Si es un aviso del sistema (Bloqueos)
       if (data.tipo === 'sistema') {
-        const sysMsg = document.createElement('li');
-        sysMsg.className = 'mensaje-sistema';
-        sysMsg.id = data.msgId;
-        sysMsg.innerText = data.texto;
-        lista.appendChild(sysMsg);
-        document.getElementById('contendor-mensajes').scrollTop = document.getElementById('contendor-mensajes').scrollHeight;
+        const sys = document.createElement('li');
+        sys.className = 'mensaje-sistema';
+        sys.innerText = data.texto;
+        lista.appendChild(sys);
         return;
       }
 
-      if (reproducirSonido && data.id !== socket.id) {
-        reproducirSonidoNotificacion();
-      }
+      if (sonido && data.id !== socket.id) reproducirSonidoNotificacion();
 
       const item = document.createElement('li');
-      item.classList.add('mensaje');
+      item.className = `mensaje ${data.id === socket.id ? 'enviado' : 'recibido'}`;
       item.id = data.msgId;
-      item.style.backgroundColor = (data.color || '#005c4b') + '55';
+      item.style.backgroundColor = (data.color || '#005c4b') + '44';
 
-      const esMio = data.id === socket.id;
-      item.classList.add(esMio ? 'enviado' : 'recibido');
+      const avatar = data.foto ? `<img src="${data.foto}" class="avatar-mini"/>` : '';
+      const btnBorrar = (data.id === socket.id || esAdmin) ? `<button class="btn-borrar" onclick="eliminarMensaje('${data.msgId}')">🗑️</button>` : '';
 
-      const avatarHtml = data.foto ? `<img src="${data.foto}" class="avatar-mini"/>` : '';
-      const btnBorrarHtml = (esMio || esAdmin) ? `<button class="btn-borrar" onclick="eliminarMensaje('${data.msgId}')">🗑️</button>` : '';
-
-      // Barra flotante de selección de emojis
-      const pickerHtml = `
-        <div class="picker-emojis">
-          <button class="btn-emoji-pick" onclick="reaccionarMensaje('${data.msgId}', '❤️')">❤️</button>
-          <button class="btn-emoji-pick" onclick="reaccionarMensaje('${data.msgId}', '😂')">😂</button>
-          <button class="btn-emoji-pick" onclick="reaccionarMensaje('${data.msgId}', '🔥')">🔥</button>
-          <button class="btn-emoji-pick" onclick="reaccionarMensaje('${data.msgId}', '👍')">👍</button>
-          <button class="btn-emoji-pick" onclick="reaccionarMensaje('${data.msgId}', '😮')">😮</button>
-        </div>
-      `;
-
-      let html = `
-        ${pickerHtml}
-        <div class="mensaje-cabecera">
-          <div class="usuario-info">
-            ${avatarHtml}
-            <span class="usuario-nombre">${data.nombre} ${data.esAdmin ? '👑' : ''}</span>
-          </div>
-          ${btnBorrarHtml}
-        </div>`;
-
-      if (data.tipo === 'texto') {
-        html += `<div>${data.texto}</div>`;
-      } else if (data.tipo === 'foto') {
-        html += `<img src="${data.contenido}" class="foto-preview"/>`;
+      let contenidoHtml = '';
+      if (data.tipo === 'texto') contenidoHtml = `<div>${data.texto}</div>`;
+      else if (data.tipo === 'foto') {
+        contenidoHtml = `<img src="${data.contenido}" class="foto-preview" onclick="verImagenFS('${data.contenido}')"/>`;
       } else if (data.tipo === 'audio') {
-        html += `<audio controls src="${data.contenido}"></audio>`;
-      } else if (data.tipo === 'encuesta') {
-        const mostrarNombres = data.mostrarNombres !== false;
-        html += `
-          <div class="encuesta-box" id="${data.encuestaId}" data-mostrar-nombres="${mostrarNombres}">
-            <strong>📊 ${data.pregunta}</strong>
-            ${data.opciones.map((op, i) => {
-              const numVotos = op.votantes ? op.votantes.length : 0;
-              const textoVotos = mostrarNombres 
-                ? (numVotos > 0 ? `Votos (${numVotos}): ${op.votantes.join(', ')}` : 'Sin votos')
-                : `Votos: ${numVotos}`;
-              return `
-                <div class="encuesta-opcion" onclick="emitirVoto('${data.encuestaId}', ${i})">
-                  <div>${op.texto}</div>
-                  <span class="votantes-lista votantes-op-${i}">${textoVotos}</span>
-                </div>
-              `;
-            }).join('')}
+        const aId = 'aud_' + Math.random().toString(36).substr(2, 5);
+        contenidoHtml = `
+          <div class="audio-cristal-box">
+            <audio id="${aId}" src="${data.contenido}" preload="metadata"></audio>
+            <button class="btn-audio-play" onclick="togglePlayAudio(this, '${aId}')">▶</button>
+            <div class="audio-info">
+              <div class="audio-progress"><div id="bar_${aId}" class="audio-bar"></div></div>
+              <div class="audio-tiempo"><span id="txt_${aId}">0:00</span></div>
+            </div>
+            <a href="${data.contenido}" download="Audio_Cristal.webm" class="btn-download-icon" title="Descargar Audio">📥</a>
           </div>`;
       }
 
-      html += `<div class="reacciones-contenedor"></div>`;
+      item.innerHTML = `
+        <div class="mensaje-cabecera">
+          <div class="usuario-info">${avatar}<span class="usuario-nombre">${data.nombre} ${data.esAdmin ? '👑' : ''}</span></div>
+          ${btnBorrar}
+        </div>
+        ${contenidoHtml}`;
 
-      item.innerHTML = html;
       lista.appendChild(item);
-
       document.getElementById('contendor-mensajes').scrollTop = document.getElementById('contendor-mensajes').scrollHeight;
     }
+
+    function eliminarMensaje(msgId) { socket.emit('eliminar_mensaje', { msgId }); }
+    socket.on('mensaje_eliminado', (data) => { const el = document.getElementById(data.msgId); if (el) el.remove(); });
   </script>
 </body>
 </html>
