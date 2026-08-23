@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat Cristal WA Pro</title>
+  <title>Chat Cristal WA Pro - Ultra</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -12,6 +12,7 @@
       background-size: 400% 400%;
       animation: gradientBG 15s ease infinite;
       display: flex; flex-direction: column; height: 100vh; color: #e9edef;
+      overflow: hidden;
     }
 
     @keyframes gradientBG {
@@ -41,7 +42,7 @@
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.03) 100%);
       backdrop-filter: blur(30px);
       border: 1px solid rgba(255, 255, 255, 0.3);
-      padding: 22px; border-radius: 24px; width: 85%; max-width: 340px;
+      padding: 22px; border-radius: 24px; width: 85%; max-width: 360px;
       display: flex; flex-direction: column; gap: 10px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
       max-height: 90vh; overflow-y: auto;
@@ -65,13 +66,14 @@
 
     .btn-admin { background: rgba(220, 53, 69, 0.7); border: 1px solid rgba(255,255,255,0.3); color: white; margin-left: 5px; }
 
-    #contendor-mensajes { flex: 1; overflow-y: auto; padding: 20px 16px; }
+    #contendor-mensajes { flex: 1; overflow-y: auto; padding: 20px 16px; position: relative; }
     #mensajes { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
 
+    /* Mensajes */
     .mensaje {
       max-width: 75%; padding: 12px 16px; font-size: 0.95rem; word-wrap: break-word;
       backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.25);
-      position: relative;
+      position: relative; transition: transform 0.2s;
     }
 
     .mensaje-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
@@ -88,14 +90,55 @@
     .mensaje.enviado { align-self: flex-end; border-radius: 20px 20px 4px 20px; }
     .mensaje.recibido { align-self: flex-start; border-radius: 20px 20px 20px 4px; }
 
+    /* Mensaje del sistema (Bloqueos/Avisos) */
+    .mensaje-sistema {
+      align-self: center; background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px;
+      padding: 6px 14px; font-size: 0.8rem; color: #ffd700; text-align: center; margin: 6px 0;
+    }
+
     .mensaje img.foto-preview { max-width: 250px; border-radius: 14px; cursor: pointer; display: block; }
 
+    /* Encuestas */
     .encuesta-box { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.15); padding: 12px; border-radius: 14px; min-width: 220px; }
     .encuesta-opcion {
       background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px 12px; margin: 6px 0; border-radius: 10px; cursor: pointer;
+      padding: 8px 12px; margin: 6px 0; border-radius: 10px; cursor: pointer; transition: background 0.2s;
     }
+    .encuesta-opcion:hover { background: rgba(255,255,255,0.18); }
     .votantes-lista { font-size: 0.7rem; color: #aebac1; margin-top: 3px; display: block; }
+
+    /* Barra de Reacciones flotantes */
+    .reacciones-contenedor {
+      display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;
+    }
+    .badge-reaccion {
+      background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px; padding: 2px 6px; font-size: 0.75rem; cursor: pointer;
+      display: flex; align-items: center; gap: 3px;
+    }
+
+    /* Selector de Emojis flotante */
+    .picker-emojis {
+      display: none; position: absolute; top: -35px; right: 0;
+      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px);
+      border-radius: 20px; padding: 4px 8px; gap: 6px; border: 1px solid rgba(255,255,255,0.3);
+    }
+    .mensaje:hover .picker-emojis { display: flex; }
+    .btn-emoji-pick { background: none; border: none; cursor: pointer; font-size: 1rem; transition: transform 0.1s; }
+    .btn-emoji-pick:hover { transform: scale(1.3); }
+
+    /* Animación Cool de Emoji Flotante */
+    @keyframes animarEmojiFlotante {
+      0% { transform: translateY(0) scale(0.5); opacity: 1; }
+      50% { transform: translateY(-40px) scale(1.5) rotate(15deg); opacity: 0.9; }
+      100% { transform: translateY(-80px) scale(1) rotate(-15deg); opacity: 0; }
+    }
+    .emoji-animado-flotante {
+      position: absolute; font-size: 2rem; pointer-events: none;
+      animation: animarEmojiFlotante 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      z-index: 50;
+    }
 
     #barra-entrada {
       background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px);
@@ -127,7 +170,14 @@
       <input type="text" id="codigo-sala-input" class="modal-input" placeholder="Código de Sala (ej. 1234)" style="display:none;" />
       <input type="color" id="color-input" style="width:100%; height:35px; border:none; cursor:pointer;" value="#005c4b" />
       <input type="file" id="foto-perfil-input" accept="image/*" class="modal-input" />
-      <button class="btn-principal" onclick="guardarPerfil()">Guardar y Entrar</button>
+      
+      <div style="display:flex; gap:6px; margin-top:5px;">
+        <button class="btn-secundario" style="flex:1;" onclick="exportarPerfil()">💾 Exportar Perfil</button>
+        <button class="btn-secundario" style="flex:1;" onclick="document.getElementById('file-import-perfil').click()">📂 Importar</button>
+        <input type="file" id="file-import-perfil" accept=".json" style="display:none;" onchange="importarPerfil(this)" />
+      </div>
+
+      <button class="btn-principal" style="margin-top:10px;" onclick="guardarPerfil()">Guardar y Entrar</button>
     </div>
   </div>
 
@@ -141,6 +191,12 @@
         <input type="text" class="modal-input opcion-input" placeholder="Opción 2" />
       </div>
       <button class="btn-secundario" onclick="agregarOpcionInput()">+ Agregar Opción</button>
+      
+      <label style="font-size:0.85rem; display:flex; align-items:center; gap:8px; margin-top:5px; cursor:pointer;">
+        <input type="checkbox" id="encuesta-mostrar-nombres" checked />
+        Mostrar quién votó (Nombres públicos)
+      </label>
+
       <button class="btn-principal" onclick="enviarEncuesta()">Publicar Encuesta</button>
       <button class="btn-secundario" style="background:#cc0000;" onclick="cerrarModalEncuesta()">Cancelar</button>
     </div>
@@ -181,7 +237,25 @@
     let salaActual = 'global';
     let chatBloqueado = false;
 
-    // Contador de reconexión / despertar de Render
+    // Generador de sonido de Notificación Web Audio API
+    function reproducirSonidoNotificacion() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nota D5
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // Nota A5
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+      } catch (e) { console.log("Audio no permitido aún."); }
+    }
+
+    // Contador Render despertando
     let tiempoRestante = 50;
     let intervaloConexion = setInterval(() => {
       if (!socket.connected) {
@@ -236,6 +310,36 @@
         reader.readAsDataURL(fotoFile);
       } else {
         conectarASala();
+      }
+    }
+
+    // Exportar e Importar Perfil
+    function exportarPerfil() {
+      const perfilData = {
+        nombre: document.getElementById('nombre-input').value,
+        color: document.getElementById('color-input').value,
+        foto: usuarioFoto
+      };
+      const blob = new Blob([JSON.stringify(perfilData)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `Perfil_${perfilData.nombre || 'usuario'}.json`;
+      a.click();
+    }
+
+    function importarPerfil(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (data.nombre) document.getElementById('nombre-input').value = data.nombre;
+            if (data.color) document.getElementById('color-input').value = data.color;
+            if (data.foto) usuarioFoto = data.foto;
+            alert("Perfil cargado con éxito.");
+          } catch(err) { alert("Archivo de perfil no válido."); }
+        };
+        reader.readAsText(input.files[0]);
       }
     }
 
@@ -305,6 +409,7 @@
     function enviarEncuesta() {
       const preg = document.getElementById('encuesta-pregunta').value.trim();
       const opcionesInputs = document.querySelectorAll('.opcion-input');
+      const mostrarNombres = document.getElementById('encuesta-mostrar-nombres').checked;
       const opciones = [];
 
       opcionesInputs.forEach(inp => {
@@ -314,7 +419,7 @@
       if (preg && opciones.length >= 2) {
         socket.emit('chat_message', {
           tipo: 'encuesta', encuestaId: 'enc_' + Date.now(),
-          pregunta: preg, opciones, id: socket.id,
+          pregunta: preg, opciones, mostrarNombres, id: socket.id,
           nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin
         });
         cerrarModalEncuesta();
@@ -328,13 +433,56 @@
     socket.on('actualizar_voto', (data) => {
       const box = document.getElementById(data.encuestaId);
       if (box) {
+        const mostrarNombres = box.getAttribute('data-mostrar-nombres') === 'true';
         data.opciones.forEach((op, i) => {
           const listSpan = box.querySelector(`.votantes-op-${i}`);
           if (listSpan) {
-            const votantesStr = op.votantes.length > 0 ? `Votos (${op.votantes.length}): ${op.votantes.join(', ')}` : 'Sin votos';
-            listSpan.innerText = votantesStr;
+            const numVotos = op.votantes ? op.votantes.length : 0;
+            if (mostrarNombres) {
+              listSpan.innerText = numVotos > 0 ? `Votos (${numVotos}): ${op.votantes.join(', ')}` : 'Sin votos';
+            } else {
+              listSpan.innerText = `Votos: ${numVotos}`;
+            }
           }
         });
+      }
+    });
+
+    // Reacciones
+    function reaccionarMensaje(msgId, emoji) {
+      socket.emit('reaccionar_mensaje', { msgId, emoji, usuario: usuarioNombre });
+    }
+
+    socket.on('actualizar_reacciones', (data) => {
+      const msgEl = document.getElementById(data.msgId);
+      if (msgEl) {
+        let cont = msgEl.querySelector('.reacciones-contenedor');
+        if (!cont) {
+          cont = document.createElement('div');
+          cont.className = 'reacciones-contenedor';
+          msgEl.appendChild(cont);
+        }
+        cont.innerHTML = '';
+        Object.keys(data.reacciones).forEach(emoji => {
+          const votantes = data.reacciones[emoji];
+          if (votantes.length > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'badge-reaccion';
+            badge.innerHTML = `${emoji} ${votantes.length}`;
+            badge.onclick = () => reaccionarMensaje(data.msgId, emoji);
+            cont.appendChild(badge);
+          }
+        });
+
+        // Lanzar animación de emoji flotante
+        const emojiFlotante = document.createElement('div');
+        emojiFlotante.className = 'emoji-animado-flotante';
+        emojiFlotante.innerText = data.emojiReaccionado;
+        emojiFlotante.style.left = (Math.random() * 60 + 20) + '%';
+        emojiFlotante.style.top = '0px';
+        msgEl.appendChild(emojiFlotante);
+
+        setTimeout(() => emojiFlotante.remove(), 1200);
       }
     });
 
@@ -350,13 +498,29 @@
     socket.on('cargar_historial', (mensajes) => {
       const lista = document.getElementById('mensajes');
       lista.innerHTML = '';
-      mensajes.forEach(m => agregarMensajeAlDOM(m));
+      mensajes.forEach(m => agregarMensajeAlDOM(m, false));
     });
 
-    socket.on('chat_message', (data) => agregarMensajeAlDOM(data));
+    socket.on('chat_message', (data) => agregarMensajeAlDOM(data, true));
 
-    function agregarMensajeAlDOM(data) {
+    function agregarMensajeAlDOM(data, reproducirSonido = true) {
       const lista = document.getElementById('mensajes');
+
+      // Si es un aviso del sistema (Bloqueos)
+      if (data.tipo === 'sistema') {
+        const sysMsg = document.createElement('li');
+        sysMsg.className = 'mensaje-sistema';
+        sysMsg.id = data.msgId;
+        sysMsg.innerText = data.texto;
+        lista.appendChild(sysMsg);
+        document.getElementById('contendor-mensajes').scrollTop = document.getElementById('contendor-mensajes').scrollHeight;
+        return;
+      }
+
+      if (reproducirSonido && data.id !== socket.id) {
+        reproducirSonidoNotificacion();
+      }
+
       const item = document.createElement('li');
       item.classList.add('mensaje');
       item.id = data.msgId;
@@ -368,7 +532,19 @@
       const avatarHtml = data.foto ? `<img src="${data.foto}" class="avatar-mini"/>` : '';
       const btnBorrarHtml = (esMio || esAdmin) ? `<button class="btn-borrar" onclick="eliminarMensaje('${data.msgId}')">🗑️</button>` : '';
 
+      // Barra flotante de selección de emojis
+      const pickerHtml = `
+        <div class="picker-emojis">
+          <button class="btn-emoji-pick" onclick="reaccionarMensaje('${data.msgId}', '❤️')">❤️</button>
+          <button class="btn-emoji-pick" onclick="reaccionarMensaje('${data.msgId}', '😂')">😂</button>
+          <button class="btn-emoji-pick" onclick="reaccionarMensaje('${data.msgId}', '🔥')">🔥</button>
+          <button class="btn-emoji-pick" onclick="reaccionarMensaje('${data.msgId}', '👍')">👍</button>
+          <button class="btn-emoji-pick" onclick="reaccionarMensaje('${data.msgId}', '😮')">😮</button>
+        </div>
+      `;
+
       let html = `
+        ${pickerHtml}
         <div class="mensaje-cabecera">
           <div class="usuario-info">
             ${avatarHtml}
@@ -382,22 +558,35 @@
       } else if (data.tipo === 'foto') {
         html += `<img src="${data.contenido}" class="foto-preview"/>`;
       } else if (data.tipo === 'encuesta') {
+        const mostrarNombres = data.mostrarNombres !== false;
         html += `
-          <div class="encuesta-box" id="${data.encuestaId}">
+          <div class="encuesta-box" id="${data.encuestaId}" data-mostrar-nombres="${mostrarNombres}">
             <strong>📊 ${data.pregunta}</strong>
-            ${data.opciones.map((op, i) => `
-              <div class="encuesta-opcion" onclick="emitirVoto('${data.encuestaId}', ${i})">
-                <div>${op.texto}</div>
-                <span class="votantes-lista votantes-op-${i}">
-                  ${op.votantes && op.votantes.length > 0 ? `Votos (${op.votantes.length}): ${op.votantes.join(', ')}` : 'Sin votos'}
-                </span>
-              </div>
-            `).join('')}
+            ${data.opciones.map((op, i) => {
+              const numVotos = op.votantes ? op.votantes.length : 0;
+              const textoVotos = mostrarNombres 
+                ? (numVotos > 0 ? `Votos (${numVotos}): ${op.votantes.join(', ')}` : 'Sin votos')
+                : `Votos: ${numVotos}`;
+              return `
+                <div class="encuesta-opcion" onclick="emitirVoto('${data.encuestaId}', ${i})">
+                  <div>${op.texto}</div>
+                  <span class="votantes-lista votantes-op-${i}">${textoVotos}</span>
+                </div>
+              `;
+            }).join('')}
           </div>`;
       }
 
+      html += `<div class="reacciones-contenedor"></div>`;
+
       item.innerHTML = html;
       lista.appendChild(item);
+
+      // Renderizar reacciones existentes
+      if (data.reacciones) {
+        socket.emit('reaccionar_mensaje', { msgId: 'dummy' }); // refresh silencioso si fuera necesario
+      }
+
       document.getElementById('contendor-mensajes').scrollTop = document.getElementById('contendor-mensajes').scrollHeight;
     }
   </script>
