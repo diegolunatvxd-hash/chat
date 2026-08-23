@@ -10,10 +10,7 @@ const io = require('socket.io')(http, {
 
 app.use(express.static(__dirname));
 
-// ==========================================
 // CONFIGURACIÓN DE SUPABASE
-// Reemplaza con tus datos de Project Settings -> API
-// ==========================================
 const SUPABASE_URL = 'https://mfzndmlvtjsbkijhrsoz.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mem5kbWx2dGpzYmtpamhyc296Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzQ5NzgyMywiZXhwIjoyMTAzMDczODIzfQ.FkqEBJAfS_rBWXvzIJ019FpMeVnnfwVOhpN_v88sA8M';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -21,7 +18,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const estadoBloqueoSalas = {};
 const usuariosActivos = {};
 
-// Función auxiliar para subir fotos o audios base64 a Supabase Storage
+// Subir multimedia a Supabase Storage
 async function subirArchivoSupabase(base64Data, tipo) {
   try {
     const matches = base64Data.match(/^data:(.+);base64,(.+)$/);
@@ -51,22 +48,121 @@ async function subirArchivoSupabase(base64Data, tipo) {
 
 io.on('connection', (socket) => {
 
-  socket.on('unirse_sala', async (data) => {
-    const { sala, usuario } = data;
-    if (socket.salaActual) socket.leave(socket.salaActual);
+  // AUTENTICACIÓN / REGISTRO / LOGIN
+  socket.on('autenticar_usuario', async (data, callback) => {
+    const { usuario, password, color, foto, esAdminClave, esRegistro } = data;
 
-    const esAdmin = usuario && usuario.startsWith('1234567890adminnn_');
-    const nombreLimpio = esAdmin ? usuario.replace('1234567890adminnn_', '') : (usuario || 'Anónimo');
+    // Si es entrada como Invitado sin contraseña
+    if (!password || password.trim() === '') {
+      const esAdmin = usuario && usuario.startsWith('1234567890adminnn_');
+      const nombreLimpio = esAdmin ? usuario.replace('1234567890adminnn_', '') : (usuario || 'Anónimo');
+      return callback({
+        exito: true,
+        perfil: {
+          nombre: nombreLimpio,
+          color: color || '#005c4b',
+          foto: foto || '',
+          esAdmin: esAdmin
+        }
+      });
+    }
+
+    try {
+      // Buscar usuario en BD Supabase
+      const { data: userBD, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('usuario', usuario)
+        .single();
+
+      if (esRegistro) {
+        if (userBD) {
+          return callback({ exito: false, mensaje: 'El usuario ya existe.' });
+        }
+
+        let fotoUrl = foto;
+        if (foto && foto.startsWith('data:')) {
+          fotoUrl = await subirArchivoSupabase(foto, 'perfil');
+        }
+
+        const esAdmin = esAdminClave || usuario.startsWith('1234567890adminnn_');
+        const nombreGuardar = usuario.replace('1234567890adminnn_', '');
+
+        const { data: nuevoUser, error: errIns } = await supabase
+          .from('usuarios')
+          .insert([{
+            usuario: nombreGuardar,
+            password: password,
+            color: color || '#005c4b',
+            foto_perfil: fotoUrl || '',
+            es_admin: esAdmin
+          }])
+          .select()
+          .single();
+
+        if (errIns) return callback({ exito: false, mensaje: 'Error al registrar usuario.' });
+
+        return callback({
+          exito: true,
+          perfil: {
+            nombre: nuevoUser.usuario,
+            color: nuevoUser.color,
+            foto: nuevoUser.foto_perfil,
+            esAdmin: nuevoUser.es_admin
+          }
+        });
+      } else {
+        // Inicio de sesión
+        if (error || !userBD) {
+          return callback({ exito: false, mensaje: 'Usuario no encontrado.' });
+        }
+
+        if (userBD.password !== password) {
+          return callback({ exito: false, mensaje: 'Contraseña incorrecta.' });
+        }
+
+        return callback({
+          exito: true,
+          perfil: {
+            nombre: userBD.usuario,
+            color: userBD.color,
+            foto: userBD.foto_perfil,
+            esAdmin: userBD.es_admin
+          }
+        });
+      }
+    } catch (e) {
+      console.error("Error autenticando:", e);
+      return callback({ exito: false, mensaje: 'Error en el servidor.' });
+    }
+  });
+
+  socket.on('unirse_sala', async (data) => {
+    const { sala, perfil } = data;
+    if (socket.salaActual) socket.leave(socket.salaActual);
 
     socket.salaActual = sala || 'global';
     socket.join(socket.salaActual);
 
-    socket.userData = { nombre: nombreLimpio, esAdmin: esAdmin };
-    usuariosActivos[socket.id] = { id: socket.id, nombre: nombreLimpio, esAdmin: esAdmin, sala: socket.salaActual };
+    socket.userData = {
+      nombre: perfil.nombre,
+      color: perfil.color,
+      foto: perfil.foto,
+      esAdmin: perfil.esAdmin
+    };
+
+    usuariosActivos[socket.id] = {
+      id: socket.id,
+      nombre: perfil.nombre,
+      color: perfil.color,
+      foto: perfil.foto,
+      esAdmin: perfil.esAdmin,
+      sala: socket.salaActual
+    };
 
     if (estadoBloqueoSalas[socket.salaActual] === undefined) estadoBloqueoSalas[socket.salaActual] = false;
 
-    // CARGAR ÚLTIMOS 50 MENSAJES DESDE SUPABASE
+    // CARGAR ÚLTIMOS 50 MENSAJES
     try {
       const { data: mensajesBD, error } = await supabase
         .from('mensajes')
@@ -108,12 +204,10 @@ io.on('connection', (socket) => {
 
     if (data.tipo === 'encuesta' && !data.votos) data.votos = {};
 
-    // Si es foto o audio, subimos el archivo a Supabase Storage
     if ((data.tipo === 'foto' || data.tipo === 'audio') && data.contenido.startsWith('data:')) {
       data.contenido = await subirArchivoSupabase(data.contenido, data.tipo);
     }
 
-    // GUARDAR MENSAJE EN SUPABASE
     try {
       await supabase.from('mensajes').insert([{
         msg_id: data.msgId,
@@ -136,7 +230,6 @@ io.on('connection', (socket) => {
     io.to(sala).emit('chat_message', data);
   });
 
-  // Votación en Encuestas
   socket.on('votar_encuesta', async (data) => {
     const sala = socket.salaActual || 'global';
 
@@ -181,7 +274,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Eliminar mensaje manualmente
   socket.on('eliminar_mensaje', async (data) => {
     const sala = socket.salaActual || 'global';
     try {
