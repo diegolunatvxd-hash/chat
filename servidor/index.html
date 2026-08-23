@@ -172,10 +172,7 @@
       display: none;
     }
 
-    .video-full {
-      width: 100%; height: 100%; object-fit: cover;
-    }
-
+    .video-full { width: 100%; height: 100%; object-fit: cover; }
     .video-pip {
       position: absolute; bottom: 12px; right: 12px; width: 110px; height: 150px;
       object-fit: cover; border-radius: 12px; border: 2px solid var(--accent-color);
@@ -185,6 +182,10 @@
     .video-pip:hover { transform: scale(1.05); }
 
     .btn-call { padding: 10px 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+    
+    .tab-container { display: flex; gap: 6px; margin-bottom: 6px; }
+    .tab-btn { flex: 1; padding: 6px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: white; cursor: pointer; font-size: 0.8rem; text-align: center; }
+    .tab-btn.active { background: var(--accent-color); color: black; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -197,9 +198,7 @@
     <div style="font-size:0.85rem; color:#aaa;" id="subtitulo-llamada">Conectando...</div>
     
     <div id="contenedor-video-call" class="video-call-box">
-      <!-- El video en pantalla grande por defecto es la del otro -->
       <video id="video-principal" class="video-full" autoplay playsinline></video>
-      <!-- La cámara propia aparece flotante en la esquina -->
       <video id="video-secundario" class="video-pip" autoplay playsinline muted title="Haz clic para cambiar vistas" onclick="intercambiarCamaras()"></video>
     </div>
 
@@ -229,19 +228,33 @@
     </div>
   </div>
 
-  <!-- MODAL PERFIL -->
+  <!-- MODAL PERFIL / INGRESAR Y REGISTRO -->
   <div id="modal-usuario" class="modal">
     <div class="modal-contenido">
-      <h3>Configurar Perfil</h3>
-      <input type="text" id="nombre-input" class="modal-input" placeholder="Tu Nombre... (o Clave Admin)" />
+      <h3>Acceso al Chat</h3>
+
+      <div class="tab-container">
+        <div id="tab-invitado" class="tab-btn active" onclick="seleccionarModo('invitado')">👤 Invitado</div>
+        <div id="tab-login" class="tab-btn" onclick="seleccionarModo('login')">🔑 Registrado</div>
+        <div id="tab-registro" class="tab-btn" onclick="seleccionarModo('registro')">✨ Registrarse</div>
+      </div>
+
+      <input type="text" id="nombre-input" class="modal-input" placeholder="Nombre de Usuario..." />
+      <input type="password" id="password-input" class="modal-input" placeholder="Contraseña (opcional para invitado)" style="display:none;" />
+
+      <!-- Opciones extra para invitado o registro -->
+      <div id="seccion-personalizacion">
+        <label style="font-size:0.8rem;">Color de burbuja:</label>
+        <input type="color" id="color-input" style="width:100%; height:35px; border:none; cursor:pointer;" value="#005c4b" />
+        <label style="font-size:0.8rem; margin-top:5px; display:block;">Foto de perfil:</label>
+        <input type="file" id="foto-perfil-input" accept="image/*" class="modal-input" />
+      </div>
+
       <select id="tipo-sala-select" class="modal-select" onchange="toggleCodigoPrivado()">
         <option value="global">🌐 Servidor Público Global</option>
         <option value="privado">🔒 Sala Privada con Código</option>
       </select>
       <input type="text" id="codigo-sala-input" class="modal-input" placeholder="Código de Sala (ej. 1234)" style="display:none;" />
-      <label style="font-size:0.8rem;">Color de burbuja:</label>
-      <input type="color" id="color-input" style="width:100%; height:35px; border:none; cursor:pointer;" value="#005c4b"; border-radius:15px; />
-      <input type="file" id="foto-perfil-input" accept="image/*" class="modal-input" />
 
       <label style="font-size:0.8rem;">Tema Cristal:</label>
       <select id="tema-select" class="modal-select" onchange="cambiarTema(this.value)">
@@ -250,7 +263,7 @@
         <option value="esmeralda">🟢 Cristal Esmeralda</option>
       </select>
 
-      <button class="btn-principal" style="margin-top:10px;" onclick="guardarPerfil()">Guardar y Entrar</button>
+      <button id="btn-entrar" class="btn-principal" style="margin-top:10px;" onclick="guardarPerfil()">Guardar y Entrar</button>
     </div>
   </div>
 
@@ -298,9 +311,11 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io({ transports: ['websocket'], upgrade: false });
-    let usuarioRaw = '', usuarioNombre = 'Anónimo', usuarioColor = '#005c4b', usuarioFoto = '', esAdmin = false, salaActual = 'global';
+    let miPerfil = { nombre: 'Anónimo', color: '#005c4b', foto: '', esAdmin: false };
+    let salaActual = 'global';
     let mediaRecorder, audioChunks = [], grabando = false;
     let chatBloqueado = false;
+    let modoAcceso = 'invitado'; // 'invitado', 'login', 'registro'
 
     // WebRTC Variables
     let localStream = null, remoteStream = null;
@@ -310,7 +325,27 @@
     let miCamaraEnGrande = false;
     const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-    // Tono de llamada
+    function seleccionarModo(modo) {
+      modoAcceso = modo;
+      document.getElementById('tab-invitado').classList.toggle('active', modo === 'invitado');
+      document.getElementById('tab-login').classList.toggle('active', modo === 'login');
+      document.getElementById('tab-registro').classList.toggle('active', modo === 'registro');
+
+      const passInput = document.getElementById('password-input');
+      const secPersonalizacion = document.getElementById('seccion-personalizacion');
+
+      if (modo === 'invitado') {
+        passInput.style.display = 'none';
+        secPersonalizacion.style.display = 'block';
+      } else if (modo === 'login') {
+        passInput.style.display = 'block';
+        secPersonalizacion.style.display = 'none';
+      } else if (modo === 'registro') {
+        passInput.style.display = 'block';
+        secPersonalizacion.style.display = 'block';
+      }
+    }
+
     function iniciarTonoLlamada() {
       const audio = document.getElementById('audio-notificacion');
       if (audio) { audio.currentTime = 0; audio.loop = true; audio.play().catch(() => {}); }
@@ -345,32 +380,54 @@
     function abrirModalPerfil() { document.getElementById('modal-usuario').style.display = 'flex'; }
 
     function guardarPerfil() {
-      usuarioRaw = document.getElementById('nombre-input').value.trim();
-      usuarioColor = document.getElementById('color-input').value;
+      const usuarioRaw = document.getElementById('nombre-input').value.trim();
+      const password = document.getElementById('password-input').value;
+      const color = document.getElementById('color-input').value;
       const fotoFile = document.getElementById('foto-perfil-input').files[0];
       const tipoSala = document.getElementById('tipo-sala-select').value;
       const codigoSala = document.getElementById('codigo-sala-input').value.trim();
 
-      esAdmin = usuarioRaw.startsWith('1234567890adminnn_');
-      usuarioNombre = esAdmin ? usuarioRaw.replace('1234567890adminnn_', '') : usuarioRaw || 'Anónimo';
+      const esAdminClave = usuarioRaw.startsWith('1234567890adminnn_');
 
-      document.getElementById('btn-admin-bloqueo').style.display = esAdmin ? 'inline-block' : 'none';
-      salaActual = (tipoSala === 'privado' && codigoSala !== '') ? 'privada_' + codigoSala : 'global';
-      document.getElementById('badge-sala').innerText = salaActual === 'global' ? '🌐 Global' : `🔒 Sala: ${codigoSala}`;
+      const conectarASala = (perfilRecibido) => {
+        miPerfil = perfilRecibido;
+        document.getElementById('btn-admin-bloqueo').style.display = miPerfil.esAdmin ? 'inline-block' : 'none';
 
-      const conectar = () => {
-        socket.emit('unirse_sala', { sala: salaActual, usuario: usuarioRaw, esAdmin });
+        salaActual = (tipoSala === 'privado' && codigoSala !== '') ? 'privada_' + codigoSala : 'global';
+        document.getElementById('badge-sala').innerText = salaActual === 'global' ? '🌐 Global' : `🔒 Sala: ${codigoSala}`;
+
+        // Unirse a la sala en Socket.io (Actualización sin recargar ventana)
+        socket.emit('unirse_sala', { sala: salaActual, perfil: miPerfil });
         document.getElementById('modal-usuario').style.display = 'none';
       };
 
-      if (fotoFile) {
+      const procesarAutenticacion = (fotoBase64 = '') => {
+        socket.emit('autenticar_usuario', {
+          usuario: usuarioRaw,
+          password: password,
+          color: color,
+          foto: fotoBase64,
+          esAdminClave: esAdminClave,
+          esRegistro: modoAcceso === 'registro'
+        }, (res) => {
+          if (res.exito) {
+            conectarASala(res.perfil);
+          } else {
+            alert(res.mensaje || "Error al autenticar usuario.");
+          }
+        });
+      };
+
+      if (fotoFile && modoAcceso !== 'login') {
         const reader = new FileReader();
-        reader.onload = (e) => { usuarioFoto = e.target.result; conectar(); };
+        reader.onload = (e) => { procesarAutenticacion(e.target.result); };
         reader.readAsDataURL(fotoFile);
-      } else { conectar(); }
+      } else {
+        procesarAutenticacion();
+      }
     }
 
-    function toggleBloqueoAdmin() { if (esAdmin) socket.emit('toggle_bloqueo'); }
+    function toggleBloqueoAdmin() { if (miPerfil.esAdmin) socket.emit('toggle_bloqueo'); }
 
     socket.on('estado_bloqueo', (data) => {
       chatBloqueado = data.bloqueado;
@@ -382,7 +439,7 @@
 
       if (btnAdmin) btnAdmin.innerText = chatBloqueado ? '🔓 Desbloquear Chat' : '🔒 Bloquear Chat';
 
-      if (chatBloqueado && !esAdmin) {
+      if (chatBloqueado && !miPerfil.esAdmin) {
         input.value = ''; input.placeholder = 'El admin ha bloqueado el lugar🔒';
         input.disabled = true; btnEnviar.disabled = true; inputFoto.disabled = true; btnMic.disabled = true;
       } else {
@@ -402,7 +459,16 @@
       opcionesInput.forEach(i => { if (i.value.trim() !== '') opciones.push(i.value.trim()); });
 
       if (pregunta && opciones.length >= 2) {
-        socket.emit('chat_message', { tipo: 'encuesta', pregunta, opciones, id: socket.id, nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin });
+        socket.emit('chat_message', {
+          tipo: 'encuesta',
+          pregunta,
+          opciones,
+          id: socket.id,
+          nombre: miPerfil.nombre,
+          color: miPerfil.color,
+          foto: miPerfil.foto,
+          esAdmin: miPerfil.esAdmin
+        });
         cerrarModalEncuesta();
         document.getElementById('encuesta-pregunta-input').value = '';
         opcionesInput.forEach(i => i.value = '');
@@ -412,10 +478,10 @@
     }
 
     function votarEncuesta(msgId, opcionIndex) {
-      socket.emit('votar_encuesta', { msgId, opcionIndex, usuarioNombre });
+      socket.emit('votar_encuesta', { msgId, opcionIndex, usuarioNombre: miPerfil.nombre });
     }
 
-    /* LLAMADAS CON CAMARA PIP Y CLICK DE INTERCAMBIO */
+    /* LLAMADAS */
     function abrirModalMiembros() {
       document.getElementById('modal-miembros').style.display = 'flex';
       socket.emit('obtener_usuarios');
@@ -466,7 +532,7 @@
         return;
       }
 
-      socket.emit('solicitar_llamada', { destinoId, emisorNombre: usuarioNombre, conVideo });
+      socket.emit('solicitar_llamada', { destinoId, emisorNombre: miPerfil.nombre, conVideo });
     }
 
     socket.on('recibir_llamada', (data) => {
@@ -512,7 +578,6 @@
       socket.emit('responder_llamada', { destinoId: idLlamadaEntrante, aceptada: true });
     }
 
-    // Intercambiar quién está en pantalla grande al hacer clic
     function intercambiarCamaras() {
       miCamaraEnGrande = !miCamaraEnGrande;
       actualizarStreamsCamaras();
@@ -638,7 +703,15 @@
     function enviarTexto() {
       const texto = document.getElementById('input').value.trim();
       if (texto) {
-        socket.emit('chat_message', { tipo: 'texto', texto, id: socket.id, nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin });
+        socket.emit('chat_message', {
+          tipo: 'texto',
+          texto,
+          id: socket.id,
+          nombre: miPerfil.nombre,
+          color: miPerfil.color,
+          foto: miPerfil.foto,
+          esAdmin: miPerfil.esAdmin
+        });
         document.getElementById('input').value = '';
       }
     }
@@ -647,7 +720,15 @@
       if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = (e) => {
-          socket.emit('chat_message', { tipo, contenido: e.target.result, id: socket.id, nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin });
+          socket.emit('chat_message', {
+            tipo,
+            contenido: e.target.result,
+            id: socket.id,
+            nombre: miPerfil.nombre,
+            color: miPerfil.color,
+            foto: miPerfil.foto,
+            esAdmin: miPerfil.esAdmin
+          });
         };
         reader.readAsDataURL(input.files[0]);
       }
@@ -665,7 +746,15 @@
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
             const reader = new FileReader();
             reader.onload = (e) => {
-              socket.emit('chat_message', { tipo: 'audio', contenido: e.target.result, id: socket.id, nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin });
+              socket.emit('chat_message', {
+                tipo: 'audio',
+                contenido: e.target.result,
+                id: socket.id,
+                nombre: miPerfil.nombre,
+                color: miPerfil.color,
+                foto: miPerfil.foto,
+                esAdmin: miPerfil.esAdmin
+              });
             };
             reader.readAsDataURL(audioBlob);
             stream.getTracks().forEach(t => t.stop());
@@ -712,7 +801,7 @@
       }
 
       const avatar = data.foto ? `<img src="${data.foto}" class="avatar-mini"/>` : '';
-      const btnBorrar = (data.id === socket.id || esAdmin) ? `<button class="btn-borrar" onclick="eliminarMensaje('${data.msgId}')">🗑️</button>` : '';
+      const btnBorrar = (data.id === socket.id || miPerfil.esAdmin) ? `<button class="btn-borrar" onclick="eliminarMensaje('${data.msgId}')">🗑️</button>` : '';
 
       let contenidoHtml = '';
       if (data.tipo === 'texto') contenidoHtml = `<div>${data.texto}</div>`;
