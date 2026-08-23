@@ -26,7 +26,8 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = 3000;
-http.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor multijugador activo en puerto ${PORT}`);
+// Cambia esto al final de tu server.js:
+const PORT = process.env.PORT || 3000;
+http.listen(PORT, () => {
+  console.log(`Servidor activo en el puerto ${PORT}`);
 });
