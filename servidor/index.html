@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat Cristal WA Pro - Ultra Max Admin</title>
+  <title>Chat Cristal WA Pro - Audio & Video Calls</title>
   <style>
     :root {
       --bg-gradient: linear-gradient(-45deg, #050b14, #101f2c, #0a1724, #1a2c38);
@@ -77,7 +77,6 @@
     #contendor-mensajes { flex: 1; overflow-y: auto; padding: 20px 16px; position: relative; }
     #mensajes { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
 
-    /* Mensajes */
     .mensaje {
       max-width: 75%; padding: 12px 16px; font-size: 0.95rem; word-wrap: break-word;
       backdrop-filter: blur(20px); border: 1px solid var(--glass-border);
@@ -95,7 +94,6 @@
     .mensaje.enviado { align-self: flex-end; border-radius: 20px 20px 4px 20px; }
     .mensaje.recibido { align-self: flex-start; border-radius: 20px 20px 20px 4px; }
 
-    /* Aviso de Bloqueo de Admin */
     .mensaje-sistema {
       align-self: center; background: rgba(0, 0, 0, 0.5);
       border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px;
@@ -103,14 +101,12 @@
       box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
     }
 
-    /* Imagen Preview */
     .mensaje img.foto-preview {
       max-width: 250px; border-radius: 14px; cursor: pointer; display: block;
       transition: transform 0.2s; border: 1px solid var(--glass-border);
     }
     .mensaje img.foto-preview:hover { transform: scale(1.02); }
 
-    /* REPRODUCTOR AUDIO CRISTAL */
     .audio-cristal-box {
       display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 18px; padding: 8px 12px;
@@ -127,7 +123,6 @@
     .btn-download-icon { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; opacity: 0.8; text-decoration: none; }
     .btn-download-icon:hover { opacity: 1; transform: scale(1.1); }
 
-    /* FULLSCREEN IMAGE MODAL */
     #modal-fullscreen-img {
       display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(20px); z-index: 1000;
@@ -136,11 +131,6 @@
     #modal-fullscreen-img img { max-width: 90vw; max-height: 80vh; border-radius: 16px; border: 1px solid var(--glass-border); }
     .btn-cerrar-fs { position: absolute; top: 20px; right: 25px; font-size: 2rem; color: white; cursor: pointer; }
     .btn-descargar-fs { margin-top: 15px; padding: 10px 20px; border-radius: 12px; background: var(--accent-color); color: #000; font-weight: bold; text-decoration: none; }
-
-    /* Encuestas y Reacciones */
-    .encuesta-box { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.15); padding: 12px; border-radius: 14px; min-width: 220px; }
-    .encuesta-opcion { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; margin: 6px 0; border-radius: 10px; cursor: pointer; }
-    .votantes-lista { font-size: 0.7rem; color: #aebac1; margin-top: 3px; display: block; }
 
     #barra-entrada { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px); padding: 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--glass-border); }
     .btn-icono { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #aebac1; }
@@ -151,24 +141,35 @@
     #input { flex: 1; padding: 10px 16px; border-radius: 20px; border: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.3); color: #e9edef; outline: none; }
     #input:disabled { background: rgba(0, 0, 0, 0.6); color: #ff6b6b; cursor: not-allowed; }
 
-    /* MODAL LLAMADA */
-    #modal-llamada { display: none; position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.85); backdrop-filter: blur(20px); border: 1px solid var(--accent-color); border-radius: 18px; padding: 16px; z-index: 500; color: white; width: 260px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-    .btn-call { padding: 8px 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
-
-    #banner-despertando { display: none; background: #ff9800; color: #000; text-align: center; padding: 8px; font-size: 0.85rem; font-weight: bold; }
+    /* MODAL DE LLAMADAS CON VIDEO Y AUDIO */
+    #modal-llamada {
+      display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: rgba(10, 20, 30, 0.95); backdrop-filter: blur(25px);
+      border: 1px solid var(--accent-color); border-radius: 24px; padding: 20px;
+      z-index: 1000; color: white; width: 320px; box-shadow: 0 20px 60px rgba(0,0,0,0.9);
+      text-align: center;
+    }
+    .btn-call { padding: 10px 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+    .video-container { display: none; grid-template-columns: 1fr; gap: 10px; margin: 12px 0; max-height: 250px; overflow: hidden; border-radius: 16px; }
+    video { width: 100%; height: 120px; background: #000; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); }
   </style>
 </head>
 <body>
 
+  <!-- Audio de alarma / tono de llamada -->
   <audio id="audio-notificacion" src="alarm_A5GlMHT.mp3" preload="auto"></audio>
 
-  <div id="banner-despertando">⚠️ Conectando al servidor... (<span id="contador">50</span>s)</div>
-
-  <!-- MODAL LLAMADA -->
+  <!-- MODAL LLAMADA & VIDEOLLAMADA -->
   <div id="modal-llamada">
-    <div style="font-weight:bold; margin-bottom:8px;" id="titulo-llamada">📞 Llamada Entrante</div>
-    <div style="font-size:0.85rem; margin-bottom:12px;" id="subtitulo-llamada">Alguien te está llamando...</div>
-    <div style="display:flex; gap:8px;" id="acciones-llamada">
+    <div style="font-weight:bold; font-size:1.1rem; margin-bottom:6px;" id="titulo-llamada">📞 Llamada Entrante</div>
+    <div style="font-size:0.85rem; color:#aaa; margin-bottom:10px;" id="subtitulo-llamada">Conectando...</div>
+    
+    <div id="contenedor-videos" class="video-container">
+      <video id="remote-video" autoplay playsinline></video>
+      <video id="local-video" autoplay playsinline muted></video>
+    </div>
+
+    <div style="display:flex; justify-content:center; gap:10px;" id="acciones-llamada">
       <button class="btn-call" style="background:#00c896; color:white;" onclick="aceptarLlamada()">Aceptar</button>
       <button class="btn-call" style="background:#ff4d4d; color:white;" onclick="colgarLlamada()">Rechazar</button>
     </div>
@@ -181,7 +182,7 @@
     <a id="btn-download-fs" class="btn-descargar-fs" download="Imagen_Cristal.png">📥 Descargar Imagen</a>
   </div>
 
-  <!-- MODAL PERFIL Y SALA -->
+  <!-- MODAL PERFIL -->
   <div id="modal-usuario" class="modal">
     <div class="modal-contenido">
       <h3>Configurar Perfil</h3>
@@ -201,38 +202,12 @@
         <option value="rosa">💖 Cristal Neón Rosa</option>
         <option value="esmeralda">🟢 Cristal Esmeralda</option>
       </select>
-      
-      <div style="display:flex; gap:6px; margin-top:5px;">
-        <button class="btn-secundario" style="flex:1;" onclick="exportarPerfil()">💾 Exportar</button>
-        <button class="btn-secundario" style="flex:1;" onclick="document.getElementById('file-import-perfil').click()">📂 Importar</button>
-        <input type="file" id="file-import-perfil" accept=".json" style="display:none;" onchange="importarPerfil(this)" />
-      </div>
 
       <button class="btn-principal" style="margin-top:10px;" onclick="guardarPerfil()">Guardar y Entrar</button>
     </div>
   </div>
 
-  <!-- MODAL ENCUESTA -->
-  <div id="modal-encuesta" class="modal" style="display:none;">
-    <div class="modal-contenido">
-      <h3>Crear Encuesta</h3>
-      <input type="text" id="encuesta-pregunta" class="modal-input" placeholder="Pregunta..." />
-      <div id="contenedor-opciones">
-        <input type="text" class="modal-input opcion-input" placeholder="Opción 1" />
-        <input type="text" class="modal-input opcion-input" placeholder="Opción 2" />
-      </div>
-      <button class="btn-secundario" onclick="agregarOpcionInput()">+ Agregar Opción</button>
-      
-      <label style="font-size:0.85rem; display:flex; align-items:center; gap:8px; cursor:pointer;">
-        <input type="checkbox" id="encuesta-mostrar-nombres" checked /> Mostrar quién votó
-      </label>
-
-      <button class="btn-principal" onclick="enviarEncuesta()">Publicar Encuesta</button>
-      <button class="btn-secundario" style="background:#cc0000;" onclick="cerrarModalEncuesta()">Cancelar</button>
-    </div>
-  </div>
-
-  <!-- MODAL MIEMBROS Y LLAMADAS -->
+  <!-- MODAL MIEMBROS Y OPCIONES DE LLAMADA -->
   <div id="modal-miembros" class="modal" style="display:none;">
     <div class="modal-contenido">
       <h3>Usuarios Conectados</h3>
@@ -248,9 +223,8 @@
     </div>
     <div style="display:flex; align-items:center;">
       <button id="btn-admin-bloqueo" class="btn-secundario btn-admin" style="display:none;" onclick="toggleBloqueoAdmin()">🔒 Bloquear Chat</button>
-      <button class="btn-icono" title="Llamar / Miembros" onclick="abrirModalMiembros()">📞</button>
+      <button class="btn-icono" title="Llamar / Miembros" onclick="abrirModalMiembros()">📞 / 📹</button>
       <button class="btn-icono" title="Perfil" onclick="abrirModalPerfil()">👤</button>
-      <button class="btn-icono" title="Encuesta" onclick="abrirModalEncuesta()">📊</button>
     </div>
   </header>
 
@@ -280,9 +254,39 @@
     let mediaRecorder, audioChunks = [], grabando = false;
     let chatBloqueado = false;
 
+    // Configuración WebRTC para llamadas
+    let localStream = null;
+    let peerConnection = null;
+    let idLlamadaEntrante = null;
+    let esVideoLlamada = false;
+    const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+    // Reproducción de Tono de Llamada / Notificación
+    function iniciarTonoLlamada() {
+      const audio = document.getElementById('audio-notificacion');
+      if (audio) {
+        audio.currentTime = 0;
+        audio.loop = true;
+        audio.play().catch(() => {});
+      }
+    }
+
+    function detenerTonoLlamada() {
+      const audio = document.getElementById('audio-notificacion');
+      if (audio) {
+        audio.pause();
+        audio.loop = false;
+        audio.currentTime = 0;
+      }
+    }
+
     function reproducirSonidoNotificacion() {
       const audio = document.getElementById('audio-notificacion');
-      if (audio) { audio.currentTime = 0; audio.play().catch(() => {}); }
+      if (audio) {
+        audio.loop = false;
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      }
     }
 
     function cambiarTema(tema) {
@@ -305,7 +309,6 @@
 
     function abrirModalPerfil() { document.getElementById('modal-usuario').style.display = 'flex'; }
 
-    // Detección de Admin
     function guardarPerfil() {
       usuarioRaw = document.getElementById('nombre-input').value.trim();
       usuarioColor = document.getElementById('color-input').value;
@@ -313,7 +316,6 @@
       const tipoSala = document.getElementById('tipo-sala-select').value;
       const codigoSala = document.getElementById('codigo-sala-input').value.trim();
 
-      // Validación clave Admin
       esAdmin = usuarioRaw.startsWith('1234567890adminnn_');
       usuarioNombre = esAdmin ? usuarioRaw.replace('1234567890adminnn_', '') : usuarioRaw || 'Anónimo';
 
@@ -333,7 +335,6 @@
       } else { conectar(); }
     }
 
-    // Alternar Bloqueo por Admin
     function toggleBloqueoAdmin() {
       if (esAdmin) socket.emit('toggle_bloqueo');
     }
@@ -364,7 +365,7 @@
       }
     });
 
-    /* SISTEMA DE LLAMADAS */
+    /* SISTEMA DE LLAMADAS WEBRTC (AUDIO & VIDEO + TONO) */
     function abrirModalMiembros() {
       document.getElementById('modal-miembros').style.display = 'flex';
       socket.emit('obtener_usuarios');
@@ -377,54 +378,158 @@
       lista.forEach(u => {
         if(u.id !== socket.id) {
           const div = document.createElement('div');
-          div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:10px;';
-          div.innerHTML = `<span>${u.nombre} ${u.esAdmin ? '👑' : ''}</span> <button class="btn-principal" onclick="iniciarLlamada('${u.id}', '${u.nombre}')">📞 Llamar</button>`;
+          div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:10px; flex-wrap:wrap; gap:6px;';
+          div.innerHTML = `
+            <span>${u.nombre} ${u.esAdmin ? '👑' : ''}</span>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-principal" style="padding:6px 10px; font-size:0.8rem;" onclick="iniciarLlamada('${u.id}', '${u.nombre}', false)">📞 Voz</button>
+              <button class="btn-principal" style="padding:6px 10px; font-size:0.8rem; background:linear-gradient(135deg, #00f2fe, #4facfe);" onclick="iniciarLlamada('${u.id}', '${u.nombre}', true)">📹 Video</button>
+            </div>`;
           cont.appendChild(div);
         }
       });
       if(cont.innerHTML === '') cont.innerHTML = '<div style="font-size:0.85rem; color:#aaa;">No hay otros usuarios conectados.</div>';
     });
 
-    let idLlamadaEntrante = null;
-    function iniciarLlamada(destinoId, nombre) {
+    async function iniciarLlamada(destinoId, nombre, conVideo) {
       cerrarModalMiembros();
+      esVideoLlamada = conVideo;
+      idLlamadaEntrante = destinoId;
+
+      iniciarTonoLlamada(); // Activar audio de llamada
+
       document.getElementById('modal-llamada').style.display = 'block';
-      document.getElementById('titulo-llamada').innerText = '📞 Llamando...';
+      document.getElementById('titulo-llamada').innerText = conVideo ? '📹 Videollamada...' : '📞 Llamando...';
       document.getElementById('subtitulo-llamada').innerText = `Llamando a ${nombre}`;
       document.getElementById('acciones-llamada').innerHTML = `<button class="btn-call" style="background:#ff4d4d; color:white; width:100%;" onclick="colgarLlamada()">Cancelar</button>`;
-      socket.emit('solicitar_llamada', { destinoId, emisorNombre: usuarioNombre });
+
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: conVideo });
+        if (conVideo) {
+          document.getElementById('contenedor-videos').style.display = 'grid';
+          document.getElementById('local-video').srcObject = localStream;
+        }
+      } catch(err) {
+        alert("No se pudo acceder al micrófono o la cámara.");
+        colgarLlamada();
+        return;
+      }
+
+      socket.emit('solicitar_llamada', { destinoId, emisorNombre: usuarioNombre, conVideo });
     }
 
-    socket.on('recibir_llamada', (data) => {
-      reproducirSonidoNotificacion();
+    socket.on('recibir_llamada', async (data) => {
+      iniciarTonoLlamada(); // Suena la alarma en bucle al recibir la llamada
       idLlamadaEntrante = data.emisorId;
+      esVideoLlamada = data.conVideo;
+
       document.getElementById('modal-llamada').style.display = 'block';
-      document.getElementById('titulo-llamada').innerText = '📞 Llamada Entrante';
+      document.getElementById('titulo-llamada').innerText = data.conVideo ? '📹 Videollamada Entrante' : '📞 Llamada de Voz Entrante';
       document.getElementById('subtitulo-llamada').innerText = `${data.emisorNombre} te está llamando...`;
       document.getElementById('acciones-llamada').innerHTML = `
         <button class="btn-call" style="background:#00c896; color:white;" onclick="aceptarLlamada()">Aceptar</button>
         <button class="btn-call" style="background:#ff4d4d; color:white;" onclick="colgarLlamada()">Rechazar</button>`;
     });
 
-    function aceptarLlamada() {
-      document.getElementById('titulo-llamada').innerText = '🎙️ En Llamada';
-      document.getElementById('subtitulo-llamada').innerText = 'Llamada conectada en tiempo real';
+    async function aceptarLlamada() {
+      detenerTonoLlamada();
+
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: esVideoLlamada });
+        if (esVideoLlamada) {
+          document.getElementById('contenedor-videos').style.display = 'grid';
+          document.getElementById('local-video').srcObject = localStream;
+        }
+      } catch (err) {
+        alert("Error de permisos multimedia.");
+        colgarLlamada();
+        return;
+      }
+
+      crearPeerConnection();
+      localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+      document.getElementById('titulo-llamada').innerText = esVideoLlamada ? '📹 En Videollamada' : '🎙️ En Llamada';
+      document.getElementById('subtitulo-llamada').innerText = 'Conectado en tiempo real';
       document.getElementById('acciones-llamada').innerHTML = `<button class="btn-call" style="background:#ff4d4d; color:white; width:100%;" onclick="colgarLlamada()">Finalizar</button>`;
+
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+
+      socket.emit('webrtc_signal', { destinoId: idLlamadaEntrante, signal: { type: 'offer', offer } });
       socket.emit('responder_llamada', { destinoId: idLlamadaEntrante, aceptada: true });
     }
 
     function colgarLlamada() {
+      detenerTonoLlamada();
       document.getElementById('modal-llamada').style.display = 'none';
-      if(idLlamadaEntrante) socket.emit('responder_llamada', { destinoId: idLlamadaEntrante, aceptada: false });
+      document.getElementById('contenedor-videos').style.display = 'none';
+
+      if (peerConnection) { peerConnection.close(); peerConnection = null; }
+      if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
+
+      if (idLlamadaEntrante) {
+        socket.emit('responder_llamada', { destinoId: idLlamadaEntrante, aceptada: false });
+        socket.emit('webrtc_signal', { destinoId: idLlamadaEntrante, signal: { type: 'hangup' } });
+      }
+      idLlamadaEntrante = null;
     }
 
-    socket.on('respuesta_llamada', (data) => {
-      if(data.aceptada) {
-        document.getElementById('titulo-llamada').innerText = '🎙️ En Llamada';
-        document.getElementById('subtitulo-llamada').innerText = 'Llamada conectada en tiempo real';
+    socket.on('respuesta_llamada', async (data) => {
+      detenerTonoLlamada();
+      if (data.aceptada) {
+        document.getElementById('titulo-llamada').innerText = esVideoLlamada ? '📹 En Videollamada' : '🎙️ En Llamada';
+        document.getElementById('subtitulo-llamada').innerText = 'Conectado en tiempo real';
       } else {
-        alert("Llamada rechazada o cancelada.");
-        document.getElementById('modal-llamada').style.display = 'none';
+        alert("Llamada rechazada o finalizada.");
+        colgarLlamada();
+      }
+    });
+
+    // Señales WebRTC para intercambio Peer-to-Peer de Audio/Video
+    function crearPeerConnection() {
+      peerConnection = new RTCPeerConnection(rtcConfig);
+
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate && idLlamadaEntrante) {
+          socket.emit('webrtc_signal', { destinoId: idLlamadaEntrante, signal: { type: 'candidate', candidate: event.candidate } });
+        }
+      };
+
+      peerConnection.ontrack = (event) => {
+        if (esVideoLlamada) {
+          document.getElementById('remote-video').srcObject = event.streams[0];
+        } else {
+          let remoteAudio = document.getElementById('remote-audio-element');
+          if (!remoteAudio) {
+            remoteAudio = document.createElement('audio');
+            remoteAudio.id = 'remote-audio-element';
+            remoteAudio.autoplay = true;
+            document.body.appendChild(remoteAudio);
+          }
+          remoteAudio.srcObject = event.streams[0];
+        }
+      };
+    }
+
+    socket.on('webrtc_signal', async (data) => {
+      const { signal } = data;
+      if (signal.type === 'hangup') { colgarLlamada(); return; }
+
+      if (!peerConnection) {
+        crearPeerConnection();
+        if (localStream) localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+      }
+
+      if (signal.type === 'offer') {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        socket.emit('webrtc_signal', { destinoId: data.emisorId, signal: { type: 'answer', answer } });
+      } else if (signal.type === 'answer') {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.answer));
+      } else if (signal.type === 'candidate') {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
       }
     });
 
@@ -511,41 +616,6 @@
       }
     }
 
-    /* ENCUESTAS */
-    function abrirModalEncuesta() { document.getElementById('modal-encuesta').style.display = 'flex'; }
-    function cerrarModalEncuesta() { document.getElementById('modal-encuesta').style.display = 'none'; }
-
-    function agregarOpcionInput() {
-      const cont = document.getElementById('contenedor-opciones');
-      if (cont.children.length < 5) {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'modal-input opcion-input';
-        input.placeholder = `Opción ${cont.children.length + 1}`;
-        cont.appendChild(input);
-      }
-    }
-
-    function enviarEncuesta() {
-      const preg = document.getElementById('encuesta-pregunta').value.trim();
-      const opcionesInputs = document.querySelectorAll('.opcion-input');
-      const mostrarNombres = document.getElementById('encuesta-mostrar-nombres').checked;
-      const opciones = [];
-
-      opcionesInputs.forEach(inp => {
-        if (inp.value.trim() !== '') opciones.push({ texto: inp.value.trim(), votantes: [] });
-      });
-
-      if (preg && opciones.length >= 2) {
-        socket.emit('chat_message', {
-          tipo: 'encuesta', encuestaId: 'enc_' + Date.now(),
-          pregunta: preg, opciones, mostrarNombres, id: socket.id,
-          nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin
-        });
-        cerrarModalEncuesta();
-      }
-    }
-
     socket.on('cargar_historial', (mensajes) => {
       document.getElementById('mensajes').innerHTML = '';
       mensajes.forEach(m => agregarMensajeAlDOM(m, false));
@@ -590,12 +660,6 @@
               <div class="audio-tiempo"><span id="txt_${aId}">0:00</span></div>
             </div>
             <a href="${data.contenido}" download="Audio_Cristal.webm" class="btn-download-icon" title="Descargar Audio">📥</a>
-          </div>`;
-      } else if (data.tipo === 'encuesta') {
-        contenidoHtml = `
-          <div class="encuesta-box">
-            <strong>📊 ${data.pregunta}</strong>
-            ${data.opciones.map((op) => `<div class="encuesta-opcion"><div>${op.texto}</div></div>`).join('')}
           </div>`;
       }
 
