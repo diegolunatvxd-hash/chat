@@ -99,6 +99,9 @@
 
     .mensaje img.foto-preview { max-width: 250px; border-radius: 14px; cursor: pointer; display: block; }
 
+    /* Audios */
+    audio { outline: none; border-radius: 12px; max-width: 240px; height: 40px; }
+
     /* Encuestas */
     .encuesta-box { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.15); padding: 12px; border-radius: 14px; min-width: 220px; }
     .encuesta-opcion {
@@ -128,7 +131,7 @@
     .btn-emoji-pick { background: none; border: none; cursor: pointer; font-size: 1rem; transition: transform 0.1s; }
     .btn-emoji-pick:hover { transform: scale(1.3); }
 
-    /* Animación Cool de Emoji Flotante */
+    /* Animación Emoji Flotante */
     @keyframes animarEmojiFlotante {
       0% { transform: translateY(0) scale(0.5); opacity: 1; }
       50% { transform: translateY(-40px) scale(1.5) rotate(15deg); opacity: 0.9; }
@@ -146,6 +149,14 @@
     }
 
     .btn-icono { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #aebac1; }
+    .btn-icono.grabando { color: #ff4d4d; animation: pulsoGrabando 1s infinite; }
+
+    @keyframes pulsoGrabando {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
     #input { flex: 1; padding: 10px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0, 0, 0, 0.3); color: #e9edef; outline: none; }
     #input:disabled { background: rgba(0, 0, 0, 0.6); color: #ff6b6b; cursor: not-allowed; }
 
@@ -155,6 +166,9 @@
   </style>
 </head>
 <body>
+
+  <!-- Audio de Notificación Local -->
+  <audio id="audio-notificacion" src="alarm_A5GlMHT.mp3" preload="auto"></audio>
 
   <div id="banner-despertando">⚠️ Conectando al servidor gratuito de Render... (<span id="contador">50</span>s)</div>
 
@@ -219,9 +233,19 @@
   </div>
 
   <div id="barra-entrada">
-    <label class="btn-icono">📷
+    <!-- Subir Imagen -->
+    <label class="btn-icono" title="Subir Imagen">📷
       <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="enviarArchivo(this, 'foto')" />
     </label>
+
+    <!-- Subir Audio desde el Sistema -->
+    <label class="btn-icono" title="Subir Audio">🎵
+      <input type="file" id="input-audio-file" accept="audio/*" style="display:none;" onchange="enviarArchivo(this, 'audio')" />
+    </label>
+
+    <!-- Grabar Audio con Micrófono -->
+    <button id="btn-mic" class="btn-icono" title="Grabar Audio" onclick="alternarGrabacion()">🎙️</button>
+
     <input id="input" autocomplete="off" placeholder="Escribe un mensaje..." />
     <button id="btn-enviar" class="btn-principal" onclick="enviarTexto()">Enviar</button>
   </div>
@@ -237,22 +261,18 @@
     let salaActual = 'global';
     let chatBloqueado = false;
 
-    // Generador de sonido de Notificación Web Audio API
+    // Variables Grabadora de Voz
+    let mediaRecorder;
+    let audioChunks = [];
+    let grabando = false;
+
+    // Sonido de Notificación usando el archivo local alarm_A5GlMHT.mp3
     function reproducirSonidoNotificacion() {
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nota D5
-        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // Nota A5
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.15);
-      } catch (e) { console.log("Audio no permitido aún."); }
+      const audio = document.getElementById('audio-notificacion');
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play().catch(e => console.log("El navegador requiere interacción previa para reproducir audio."));
+      }
     }
 
     // Contador Render despertando
@@ -352,6 +372,7 @@
       const input = document.getElementById('input');
       const btnEnviar = document.getElementById('btn-enviar');
       const inputFoto = document.getElementById('input-foto');
+      const btnMic = document.getElementById('btn-mic');
 
       if (chatBloqueado && !esAdmin) {
         input.value = '';
@@ -359,11 +380,13 @@
         input.disabled = true;
         btnEnviar.disabled = true;
         inputFoto.disabled = true;
+        btnMic.disabled = true;
       } else {
         input.placeholder = 'Escribe un mensaje...';
         input.disabled = false;
         btnEnviar.disabled = false;
         inputFoto.disabled = false;
+        btnMic.disabled = false;
       }
     });
 
@@ -389,6 +412,44 @@
           });
         };
         reader.readAsDataURL(file);
+      }
+    }
+
+    // Lógica para Grabar Audio con el Micrófono
+    async function alternarGrabacion() {
+      const btnMic = document.getElementById('btn-mic');
+      if (!grabando) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+          mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              socket.emit('chat_message', {
+                tipo: 'audio', contenido: e.target.result, id: socket.id,
+                nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin
+              });
+            };
+            reader.readAsDataURL(audioBlob);
+            stream.getTracks().forEach(track => track.stop());
+          };
+
+          mediaRecorder.start();
+          grabando = true;
+          btnMic.classList.add('grabando');
+          document.getElementById('input').placeholder = "Grabando audio... Haz clic en el micrófono para enviar";
+        } catch (err) {
+          alert("No se pudo acceder al micrófono.");
+        }
+      } else {
+        mediaRecorder.stop();
+        grabando = false;
+        btnMic.classList.remove('grabando');
+        document.getElementById('input').placeholder = "Escribe un mensaje...";
       }
     }
 
@@ -557,6 +618,8 @@
         html += `<div>${data.texto}</div>`;
       } else if (data.tipo === 'foto') {
         html += `<img src="${data.contenido}" class="foto-preview"/>`;
+      } else if (data.tipo === 'audio') {
+        html += `<audio controls src="${data.contenido}"></audio>`;
       } else if (data.tipo === 'encuesta') {
         const mostrarNombres = data.mostrarNombres !== false;
         html += `
@@ -581,11 +644,6 @@
 
       item.innerHTML = html;
       lista.appendChild(item);
-
-      // Renderizar reacciones existentes
-      if (data.reacciones) {
-        socket.emit('reaccionar_mensaje', { msgId: 'dummy' }); // refresh silencioso si fuera necesario
-      }
 
       document.getElementById('contendor-mensajes').scrollTop = document.getElementById('contendor-mensajes').scrollHeight;
     }
