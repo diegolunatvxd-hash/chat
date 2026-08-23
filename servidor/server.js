@@ -9,15 +9,14 @@ const io = require('socket.io')(http, {
 
 app.use(express.static(__dirname));
 
-// Historial en memoria por cada sala (se borra si se reinicia el servidor)
 const historialSalas = {};
+const estadoBloqueoSalas = {}; // Guarda si la sala está bloqueada
 
 io.on('connection', (socket) => {
-  console.log(`Usuario conectado: ${socket.id}`);
 
-  // Unirse a una sala (Pública o Privada)
-  socket.on('unirse_sala', (sala) => {
-    // Salir de salas anteriores
+  socket.on('unirse_sala', (data) => {
+    const { sala, usuario } = data;
+    
     if (socket.salaActual) {
       socket.leave(socket.salaActual);
     }
@@ -25,40 +24,87 @@ io.on('connection', (socket) => {
     socket.salaActual = sala;
     socket.join(sala);
 
-    // Si la sala no existe en el historial, se crea
-    if (!historialSalas[sala]) {
-      historialSalas[sala] = [];
-    }
+    // Detección de Admin mediante la clave
+    const esAdmin = usuario && usuario.startsWith('1234567890adminnn_');
+    const nombreLimpio = esAdmin ? usuario.replace('1234567890adminnn_', '') : usuario;
 
-    // Enviar mensajes anteriores al usuario que recién entra
+    socket.userData = {
+      nombre: nombreLimpio,
+      esAdmin: esAdmin
+    };
+
+    if (!historialSalas[sala]) historialSalas[sala] = [];
+    if (estadoBloqueoSalas[sala] === undefined) estadoBloqueoSalas[sala] = false;
+
+    // Enviar historial y estado de bloqueo
     socket.emit('cargar_historial', historialSalas[sala]);
+    socket.emit('estado_bloqueo', { bloqueado: estadoBloqueoSalas[sala] });
   });
 
-  // Enviar mensaje a la sala actual
   socket.on('chat_message', (data) => {
     const sala = socket.salaActual || 'global';
 
-    // Guardar en el historial de la sala (máximo 50 mensajes)
+    // Si la sala está bloqueada y no es admin, se bloquea el mensaje
+    if (estadoBloqueoSalas[sala] && !data.esAdmin) return;
+
+    data.msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+
     if (!historialSalas[sala]) historialSalas[sala] = [];
     historialSalas[sala].push(data);
     if (historialSalas[sala].length > 50) historialSalas[sala].shift();
 
-    // Reemitir solo a los usuarios en la misma sala
     io.to(sala).emit('chat_message', data);
   });
 
-  // Votos de encuestas dentro de la sala
+  // Votar en encuestas (Registra qué usuario votó)
   socket.on('votar_encuesta', (data) => {
     const sala = socket.salaActual || 'global';
-    io.to(sala).emit('actualizar_voto', data);
+    const historial = historialSalas[sala];
+
+    if (!historial) return;
+
+    const mensajeEncuesta = historial.find(m => m.encuestaId === data.encuestaId);
+    if (mensajeEncuesta && mensajeEncuesta.opciones[data.opcionIndex]) {
+      const opcion = mensajeEncuesta.opciones[data.opcionIndex];
+      if (!opcion.votantes) opcion.votantes = [];
+
+      // Evitar que vote dos veces la misma persona
+      if (!opcion.votantes.includes(data.usuario)) {
+        opcion.votantes.push(data.usuario);
+        io.to(sala).emit('actualizar_voto', {
+          encuestaId: data.encuestaId,
+          opciones: mensajeEncuesta.opciones
+        });
+      }
+    }
   });
 
-  socket.on('disconnect', () => {
-    console.log(`Usuario desconectado: ${socket.id}`);
+  // Eliminar mensaje (Propio o cualquiera si es Admin)
+  socket.on('eliminar_mensaje', (data) => {
+    const sala = socket.salaActual || 'global';
+    if (!historialSalas[sala]) return;
+
+    const index = historialSalas[sala].findIndex(m => m.msgId === data.msgId);
+    if (index !== -1) {
+      const msg = historialSalas[sala][index];
+      if (socket.userData.esAdmin || msg.id === socket.id) {
+        historialSalas[sala].splice(index, 1);
+        io.to(sala).emit('mensaje_eliminado', { msgId: data.msgId });
+      }
+    }
   });
+
+  // Alternar bloqueo de sala (Solo Admin)
+  socket.on('toggle_bloqueo', () => {
+    const sala = socket.salaActual || 'global';
+    if (socket.userData && socket.userData.esAdmin) {
+      estadoBloqueoSalas[sala] = !estadoBloqueoSalas[sala];
+      io.to(sala).emit('estado_bloqueo', { bloqueado: estadoBloqueoSalas[sala] });
+    }
+  });
+
+  socket.on('disconnect', () => {});
 });
 
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => {
-  console.log(`Servidor activo en el puerto ${PORT}`);
-});
+http.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
