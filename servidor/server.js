@@ -54,7 +54,29 @@ io.on('connection', (socket) => {
     }
   });
 
-  /* GESTIÓN Y SEÑALIZACIÓN WEBRTC (AUDIO & VIDEO) */
+  // Votación en Encuestas
+  socket.on('votar_encuesta', (data) => {
+    const sala = socket.salaActual || 'global';
+    if (!historialSalas[sala]) return;
+
+    const msg = historialSalas[sala].find(m => m.msgId === data.msgId);
+    if (msg && msg.tipo === 'encuesta') {
+      if (!msg.votos) msg.votos = {};
+
+      // Eliminar voto previo del usuario si ya había votado
+      Object.keys(msg.votos).forEach(opt => {
+        msg.votos[opt] = msg.votos[opt].filter(u => u !== data.usuarioNombre);
+      });
+
+      // Añadir voto a la nueva opción
+      if (!msg.votos[data.opcionIndex]) msg.votos[data.opcionIndex] = [];
+      msg.votos[data.opcionIndex].push(data.usuarioNombre);
+
+      io.to(sala).emit('chat_message', msg);
+    }
+  });
+
+  /* GESTIÓN WEBRTC (AUDIO & VIDEO) */
   socket.on('obtener_usuarios', () => {
     const salaUsers = Object.values(usuariosActivos).filter(u => u.sala === socket.salaActual);
     socket.emit('lista_usuarios', salaUsers);
@@ -86,7 +108,13 @@ io.on('connection', (socket) => {
     const sala = socket.salaActual || 'global';
     if (estadoBloqueoSalas[sala] && !data.esAdmin) return;
 
-    data.msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    if (!data.msgId) {
+      data.msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    }
+
+    if (data.tipo === 'encuesta' && !data.votos) {
+      data.votos = {};
+    }
 
     if (!historialSalas[sala]) historialSalas[sala] = [];
     historialSalas[sala].push(data);
@@ -115,4 +143,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => console.log(`Servidor iniciado en puerto ${PORT}`));
+http.listen(PORT, () => console.log(`Servidor escuchando en puerto ${PORT}`));
