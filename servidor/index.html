@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat Cristal WA Pro - Ultra Max</title>
+  <title>Chat Cristal WA Pro - Ultra Max Admin</title>
   <style>
     :root {
       --bg-gradient: linear-gradient(-45deg, #050b14, #101f2c, #0a1724, #1a2c38);
@@ -72,7 +72,7 @@
       padding: 8px; border-radius: 10px; cursor: pointer; font-size: 0.85rem; text-align: center;
     }
 
-    .btn-admin { background: rgba(220, 53, 69, 0.7); border: 1px solid rgba(255,255,255,0.3); color: white; margin-left: 5px; }
+    .btn-admin { background: rgba(220, 53, 69, 0.8); border: 1px solid rgba(255,255,255,0.3); color: white; margin-left: 5px; font-weight: bold; }
 
     #contendor-mensajes { flex: 1; overflow-y: auto; padding: 20px 16px; position: relative; }
     #mensajes { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
@@ -95,10 +95,12 @@
     .mensaje.enviado { align-self: flex-end; border-radius: 20px 20px 4px 20px; }
     .mensaje.recibido { align-self: flex-start; border-radius: 20px 20px 20px 4px; }
 
+    /* Aviso de Bloqueo de Admin */
     .mensaje-sistema {
-      align-self: center; background: rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px;
-      padding: 6px 14px; font-size: 0.8rem; color: #ffd700; text-align: center; margin: 6px 0;
+      align-self: center; background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 12px;
+      padding: 8px 16px; font-size: 0.85rem; color: #ffd700; text-align: center; margin: 6px 0;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
     }
 
     /* Imagen Preview */
@@ -108,7 +110,7 @@
     }
     .mensaje img.foto-preview:hover { transform: scale(1.02); }
 
-    /* REPRODUCTOR AUDIO CRISTAL DE LUJO */
+    /* REPRODUCTOR AUDIO CRISTAL */
     .audio-cristal-box {
       display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 18px; padding: 8px 12px;
@@ -122,7 +124,7 @@
     .audio-progress { width: 100%; height: 5px; background: rgba(255,255,255,0.2); border-radius: 5px; cursor: pointer; position: relative; }
     .audio-bar { width: 0%; height: 100%; background: var(--accent-color); border-radius: 5px; }
     .audio-tiempo { font-size: 0.65rem; color: #aebac1; display: flex; justify-content: space-between; }
-    .btn-download-icon { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; opacity: 0.8; }
+    .btn-download-icon { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; opacity: 0.8; text-decoration: none; }
     .btn-download-icon:hover { opacity: 1; transform: scale(1.1); }
 
     /* FULLSCREEN IMAGE MODAL */
@@ -140,13 +142,6 @@
     .encuesta-opcion { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; margin: 6px 0; border-radius: 10px; cursor: pointer; }
     .votantes-lista { font-size: 0.7rem; color: #aebac1; margin-top: 3px; display: block; }
 
-    .reacciones-contenedor { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
-    .badge-reaccion { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 2px 6px; font-size: 0.75rem; cursor: pointer; }
-
-    .picker-emojis { display: none; position: absolute; top: -35px; right: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); border-radius: 20px; padding: 4px 8px; gap: 6px; border: 1px solid rgba(255,255,255,0.3); }
-    .mensaje:hover .picker-emojis { display: flex; }
-    .btn-emoji-pick { background: none; border: none; cursor: pointer; font-size: 1rem; }
-
     #barra-entrada { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px); padding: 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--glass-border); }
     .btn-icono { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #aebac1; }
     .btn-icono.grabando { color: #ff4d4d; animation: pulsoGrabando 1s infinite; }
@@ -154,7 +149,8 @@
     @keyframes pulsoGrabando { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 
     #input { flex: 1; padding: 10px 16px; border-radius: 20px; border: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.3); color: #e9edef; outline: none; }
-    
+    #input:disabled { background: rgba(0, 0, 0, 0.6); color: #ff6b6b; cursor: not-allowed; }
+
     /* MODAL LLAMADA */
     #modal-llamada { display: none; position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.85); backdrop-filter: blur(20px); border: 1px solid var(--accent-color); border-radius: 18px; padding: 16px; z-index: 500; color: white; width: 260px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
     .btn-call { padding: 8px 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
@@ -168,7 +164,7 @@
 
   <div id="banner-despertando">⚠️ Conectando al servidor... (<span id="contador">50</span>s)</div>
 
-  <!-- MODAL LLAMADA ENTRANTE / EN CURSO -->
+  <!-- MODAL LLAMADA -->
   <div id="modal-llamada">
     <div style="font-weight:bold; margin-bottom:8px;" id="titulo-llamada">📞 Llamada Entrante</div>
     <div style="font-size:0.85rem; margin-bottom:12px;" id="subtitulo-llamada">Alguien te está llamando...</div>
@@ -189,7 +185,7 @@
   <div id="modal-usuario" class="modal">
     <div class="modal-contenido">
       <h3>Configurar Perfil</h3>
-      <input type="text" id="nombre-input" class="modal-input" placeholder="Tu Nombre..." />
+      <input type="text" id="nombre-input" class="modal-input" placeholder="Tu Nombre... (o Clave Admin)" />
       <select id="tipo-sala-select" class="modal-select" onchange="toggleCodigoPrivado()">
         <option value="global">🌐 Servidor Público Global</option>
         <option value="privado">🔒 Sala Privada con Código</option>
@@ -199,7 +195,7 @@
       <input type="color" id="color-input" style="width:100%; height:35px; border:none; cursor:pointer;" value="#005c4b" />
       <input type="file" id="foto-perfil-input" accept="image/*" class="modal-input" />
 
-      <label style="font-size:0.8rem;">Tema de Cristal (Función Única):</label>
+      <label style="font-size:0.8rem;">Tema Cristal:</label>
       <select id="tema-select" class="modal-select" onchange="cambiarTema(this.value)">
         <option value="azul">🔷 Cristal Neón Azul</option>
         <option value="rosa">💖 Cristal Neón Rosa</option>
@@ -250,7 +246,7 @@
       <h2>Chat Cristal WA</h2>
       <span id="badge-sala" class="badge-sala">🌐 Global</span>
     </div>
-    <div>
+    <div style="display:flex; align-items:center;">
       <button id="btn-admin-bloqueo" class="btn-secundario btn-admin" style="display:none;" onclick="toggleBloqueoAdmin()">🔒 Bloquear Chat</button>
       <button class="btn-icono" title="Llamar / Miembros" onclick="abrirModalMiembros()">📞</button>
       <button class="btn-icono" title="Perfil" onclick="abrirModalPerfil()">👤</button>
@@ -282,14 +278,13 @@
     const socket = io({ transports: ['websocket'], upgrade: false });
     let usuarioRaw = '', usuarioNombre = 'Anónimo', usuarioColor = '#005c4b', usuarioFoto = '', esAdmin = false, salaActual = 'global';
     let mediaRecorder, audioChunks = [], grabando = false;
-    let usuariosConectados = [];
+    let chatBloqueado = false;
 
     function reproducirSonidoNotificacion() {
       const audio = document.getElementById('audio-notificacion');
       if (audio) { audio.currentTime = 0; audio.play().catch(() => {}); }
     }
 
-    // Temas Cristal Únicos
     function cambiarTema(tema) {
       if (tema === 'rosa') {
         document.documentElement.style.setProperty('--bg-gradient', 'linear-gradient(-45deg, #1f0518, #2c102b, #240a23, #381a37)');
@@ -310,6 +305,7 @@
 
     function abrirModalPerfil() { document.getElementById('modal-usuario').style.display = 'flex'; }
 
+    // Detección de Admin
     function guardarPerfil() {
       usuarioRaw = document.getElementById('nombre-input').value.trim();
       usuarioColor = document.getElementById('color-input').value;
@@ -317,6 +313,7 @@
       const tipoSala = document.getElementById('tipo-sala-select').value;
       const codigoSala = document.getElementById('codigo-sala-input').value.trim();
 
+      // Validación clave Admin
       esAdmin = usuarioRaw.startsWith('1234567890adminnn_');
       usuarioNombre = esAdmin ? usuarioRaw.replace('1234567890adminnn_', '') : usuarioRaw || 'Anónimo';
 
@@ -325,7 +322,7 @@
       document.getElementById('badge-sala').innerText = salaActual === 'global' ? '🌐 Global' : `🔒 Sala: ${codigoSala}`;
 
       const conectar = () => {
-        socket.emit('unirse_sala', { sala: salaActual, usuario: usuarioNombre, esAdmin });
+        socket.emit('unirse_sala', { sala: salaActual, usuario: usuarioRaw, esAdmin });
         document.getElementById('modal-usuario').style.display = 'none';
       };
 
@@ -335,6 +332,37 @@
         reader.readAsDataURL(fotoFile);
       } else { conectar(); }
     }
+
+    // Alternar Bloqueo por Admin
+    function toggleBloqueoAdmin() {
+      if (esAdmin) socket.emit('toggle_bloqueo');
+    }
+
+    socket.on('estado_bloqueo', (data) => {
+      chatBloqueado = data.bloqueado;
+      const input = document.getElementById('input');
+      const btnEnviar = document.getElementById('btn-enviar');
+      const inputFoto = document.getElementById('input-foto');
+      const btnMic = document.getElementById('btn-mic');
+      const btnAdmin = document.getElementById('btn-admin-bloqueo');
+
+      if (btnAdmin) btnAdmin.innerText = chatBloqueado ? '🔓 Desbloquear Chat' : '🔒 Bloquear Chat';
+
+      if (chatBloqueado && !esAdmin) {
+        input.value = '';
+        input.placeholder = 'El admin ha bloqueado el lugar🔒';
+        input.disabled = true;
+        btnEnviar.disabled = true;
+        inputFoto.disabled = true;
+        btnMic.disabled = true;
+      } else {
+        input.placeholder = 'Escribe un mensaje...';
+        input.disabled = false;
+        btnEnviar.disabled = false;
+        inputFoto.disabled = false;
+        btnMic.disabled = false;
+      }
+    });
 
     /* SISTEMA DE LLAMADAS */
     function abrirModalMiembros() {
@@ -350,7 +378,7 @@
         if(u.id !== socket.id) {
           const div = document.createElement('div');
           div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:10px;';
-          div.innerHTML = `<span>${u.nombre}</span> <button class="btn-principal" onclick="iniciarLlamada('${u.id}', '${u.nombre}')">📞 Llamar</button>`;
+          div.innerHTML = `<span>${u.nombre} ${u.esAdmin ? '👑' : ''}</span> <button class="btn-principal" onclick="iniciarLlamada('${u.id}', '${u.nombre}')">📞 Llamar</button>`;
           cont.appendChild(div);
         }
       });
@@ -483,6 +511,41 @@
       }
     }
 
+    /* ENCUESTAS */
+    function abrirModalEncuesta() { document.getElementById('modal-encuesta').style.display = 'flex'; }
+    function cerrarModalEncuesta() { document.getElementById('modal-encuesta').style.display = 'none'; }
+
+    function agregarOpcionInput() {
+      const cont = document.getElementById('contenedor-opciones');
+      if (cont.children.length < 5) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'modal-input opcion-input';
+        input.placeholder = `Opción ${cont.children.length + 1}`;
+        cont.appendChild(input);
+      }
+    }
+
+    function enviarEncuesta() {
+      const preg = document.getElementById('encuesta-pregunta').value.trim();
+      const opcionesInputs = document.querySelectorAll('.opcion-input');
+      const mostrarNombres = document.getElementById('encuesta-mostrar-nombres').checked;
+      const opciones = [];
+
+      opcionesInputs.forEach(inp => {
+        if (inp.value.trim() !== '') opciones.push({ texto: inp.value.trim(), votantes: [] });
+      });
+
+      if (preg && opciones.length >= 2) {
+        socket.emit('chat_message', {
+          tipo: 'encuesta', encuestaId: 'enc_' + Date.now(),
+          pregunta: preg, opciones, mostrarNombres, id: socket.id,
+          nombre: usuarioNombre, color: usuarioColor, foto: usuarioFoto, esAdmin
+        });
+        cerrarModalEncuesta();
+      }
+    }
+
     socket.on('cargar_historial', (mensajes) => {
       document.getElementById('mensajes').innerHTML = '';
       mensajes.forEach(m => agregarMensajeAlDOM(m, false));
@@ -498,6 +561,7 @@
         sys.className = 'mensaje-sistema';
         sys.innerText = data.texto;
         lista.appendChild(sys);
+        document.getElementById('contendor-mensajes').scrollTop = document.getElementById('contendor-mensajes').scrollHeight;
         return;
       }
 
@@ -526,6 +590,12 @@
               <div class="audio-tiempo"><span id="txt_${aId}">0:00</span></div>
             </div>
             <a href="${data.contenido}" download="Audio_Cristal.webm" class="btn-download-icon" title="Descargar Audio">📥</a>
+          </div>`;
+      } else if (data.tipo === 'encuesta') {
+        contenidoHtml = `
+          <div class="encuesta-box">
+            <strong>📊 ${data.pregunta}</strong>
+            ${data.opciones.map((op) => `<div class="encuesta-opcion"><div>${op.texto}</div></div>`).join('')}
           </div>`;
       }
 
