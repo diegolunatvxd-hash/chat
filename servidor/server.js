@@ -68,16 +68,37 @@ io.on('connection', (socket) => {
     }
 
     try {
-      // Buscar usuario en BD Supabase
-      const { data: userBD, error } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('usuario', usuario)
-        .single();
-
       if (esRegistro) {
-        if (userBD) {
+        // Buscar si el usuario ya existe
+        const { data: userExistente, error: errorUsuario } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('usuario', usuario)
+          .maybeSingle();
+
+        if (errorUsuario) {
+          console.error("Error buscando usuario:", errorUsuario);
+          return callback({ exito: false, mensaje: 'Error al comprobar el usuario.' });
+        }
+
+        if (userExistente) {
           return callback({ exito: false, mensaje: 'El usuario ya existe.' });
+        }
+
+        // Buscar si la contraseña ya está utilizada por otra cuenta
+        const { data: passwordExistente, error: errorPassword } = await supabase
+          .from('usuarios')
+          .select('usuario')
+          .eq('password', password)
+          .maybeSingle();
+
+        if (errorPassword) {
+          console.error("Error comprobando contraseña:", errorPassword);
+          return callback({ exito: false, mensaje: 'Error al comprobar la contraseña.' });
+        }
+
+        if (passwordExistente) {
+          return callback({ exito: false, mensaje: 'Esta contraseña ya está en uso. Elige otra.' });
         }
 
         let fotoUrl = foto;
@@ -100,7 +121,9 @@ io.on('connection', (socket) => {
           .select()
           .single();
 
-        if (errIns) return callback({ exito: false, mensaje: 'Error al registrar usuario.' });
+        if (errIns) {
+          return callback({ exito: false, mensaje: 'Error al registrar usuario.' });
+        }
 
         return callback({
           exito: true,
@@ -112,13 +135,20 @@ io.on('connection', (socket) => {
           }
         });
       } else {
-        // Inicio de sesión
-        if (error || !userBD) {
-          return callback({ exito: false, mensaje: 'Usuario no encontrado.' });
+        // Inicio de sesión usando únicamente la contraseña
+        const { data: userBD, error } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('password', password)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Error buscando usuario por contraseña:", error);
+          return callback({ exito: false, mensaje: 'Error al iniciar sesión.' });
         }
 
-        if (userBD.password !== password) {
-          return callback({ exito: false, mensaje: 'Contraseña incorrecta.' });
+        if (!userBD) {
+          return callback({ exito: false, mensaje: 'Contraseña incorrecta o cuenta no encontrada.' });
         }
 
         return callback({
@@ -327,3 +357,4 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => console.log(`Servidor escuchando en puerto ${PORT}`));
+        
