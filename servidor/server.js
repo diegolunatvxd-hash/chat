@@ -11,9 +11,11 @@ const io = require('socket.io')(http, {
 app.use(express.static(__dirname));
 
 // CONFIGURACIÓN DE SUPABASE
+//no cambiar inicio
 const SUPABASE_URL = 'https://mfzndmlvtjsbkijhrsoz.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mem5kbWx2dGpzYmtpamhyc296Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzQ5NzgyMywiZXhwIjoyMTAzMDczODIzfQ.FkqEBJAfS_rBWXvzIJ019FpMeVnnfwVOhpN_v88sA8M';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+//no cambiar fin
 
 const estadoBloqueoSalas = {};
 const usuariosActivos = {};
