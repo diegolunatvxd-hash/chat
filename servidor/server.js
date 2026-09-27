@@ -50,7 +50,7 @@ io.on('connection', (socket) => {
       const nombreLimpio = usuario || 'Anónimo';
       return callback({
         exito: true,
-        perfil: { nombre: nombreLimpio, identificador: 'invitado_'+socket.id, color: color || '#005c4b', foto: foto || '', esAdmin: false },
+        perfil: { nombre: nombreLimpio, identificador: 'invitado_'+socket.id, color: color || '#005c4b', foto: foto || '', descripcion: 'Cuenta de invitado', esAdmin: false },
         misChats: [] 
       });
     }
@@ -60,7 +60,6 @@ io.on('connection', (socket) => {
       if (esRegistro) {
         if (!identificador) return callback({ exito: false, mensaje: 'El identificador es obligatorio.' });
         
-        // Verificar existencia de usuario o identificador
         const { data: userExistente } = await supabase.from('usuarios').select('*').or(`usuario.eq.${usuario},identificador.eq.${identificador}`).maybeSingle();
         if (userExistente) return callback({ exito: false, mensaje: 'El usuario o identificador ya existe.' });
 
@@ -71,13 +70,12 @@ io.on('connection', (socket) => {
         const nombreGuardar = usuario.replace('1234567890adminnn_', '');
 
         const { data: nuevoUser, error: errIns } = await supabase.from('usuarios').insert([{
-          usuario: nombreGuardar, password: password, identificador: identificador, color: color || '#005c4b', foto_perfil: fotoUrl || '', es_admin: esAdmin
+          usuario: nombreGuardar, password: password, identificador: identificador, color: color || '#005c4b', foto_perfil: fotoUrl || '', descripcion: '¡Hola! Estoy usando Chat Cristal.', es_admin: esAdmin
         }]).select().single();
 
         if (errIns) return callback({ exito: false, mensaje: 'Error al registrar usuario.' });
         userLogueado = nuevoUser;
       } else {
-        // Logueo requiere identificador y password
         const { data: userBD, error } = await supabase.from('usuarios').select('*').eq('identificador', identificador).eq('password', password).maybeSingle();
         if (error || !userBD) return callback({ exito: false, mensaje: 'Credenciales incorrectas.' });
         userLogueado = userBD;
@@ -87,7 +85,7 @@ io.on('connection', (socket) => {
 
       return callback({
         exito: true,
-        perfil: { nombre: userLogueado.usuario, identificador: userLogueado.identificador, color: userLogueado.color, foto: userLogueado.foto_perfil, esAdmin: userLogueado.es_admin },
+        perfil: { nombre: userLogueado.usuario, identificador: userLogueado.identificador, color: userLogueado.color, foto: userLogueado.foto_perfil, descripcion: userLogueado.descripcion, esAdmin: userLogueado.es_admin },
         misChats: misChatsBD || []
       });
 
@@ -97,9 +95,45 @@ io.on('connection', (socket) => {
     }
   });
 
-  // CREAR DM O AÑADIR A GRUPO POR IDENTIFICADOR
+  // OBTENER PERFIL DE OTRO USUARIO
+  socket.on('obtener_perfil_usuario', async (identificador, callback) => {
+    try {
+        const { data } = await supabase.from('usuarios').select('usuario, identificador, foto_perfil, descripcion').eq('identificador', identificador).single();
+        if (data) callback({ exito: true, perfil: data });
+        else callback({ exito: false });
+    } catch(e) { callback({ exito: false }); }
+  });
+
+  // ACTUALIZAR MI PERFIL
+  socket.on('actualizar_mi_perfil', async (data, callback) => {
+      try {
+          let fotoUrl = data.foto;
+          if (fotoUrl && fotoUrl.startsWith('data:')) fotoUrl = await subirArchivoSupabase(fotoUrl, 'perfil');
+          
+          let updateData = { usuario: data.nombre, descripcion: data.descripcion };
+          if(fotoUrl) updateData.foto_perfil = fotoUrl;
+          if(data.password) updateData.password = data.password;
+
+          await supabase.from('usuarios').update(updateData).eq('identificador', data.identificador);
+          callback({ exito: true, fotoNueva: fotoUrl });
+      } catch(e) {
+          callback({ exito: false });
+      }
+  });
+
+  // CREAR UN GRUPO NUEVO
+  socket.on('crear_nuevo_grupo', async (data, callback) => {
+      try {
+          const salaId = 'grupo_' + Date.now();
+          await supabase.from('chats_participantes').insert({
+              sala: salaId, tipo: 'grupo', usuario: data.miNombre, identificador: data.miIdentificador, nombre_chat: data.nombreGrupo
+          });
+          callback({ exito: true, chat: { sala: salaId, tipo: 'grupo', nombre_chat: data.nombreGrupo } });
+      } catch (e) { callback({ exito: false, mensaje: 'Error creando grupo' }); }
+  });
+
+  // CREAR DM O AÑADIR A GRUPO EXISTENTE POR IDENTIFICADOR
   socket.on('crear_o_anadir_por_id', async (data, callback) => {
-    // data = { accion: 'dm' o 'grupo', identificadorTarget, miIdentificador, miNombre, salaActual }
     try {
         const { data: targetUser } = await supabase.from('usuarios').select('*').eq('identificador', data.identificadorTarget).maybeSingle();
         if(!targetUser) return callback({ exito: false, mensaje: 'No se encontró a nadie con ese identificador.' });
@@ -115,7 +149,6 @@ io.on('connection', (socket) => {
             
             callback({ exito: true, chat: { sala: salaId, tipo: 'dm', nombre_chat: targetUser.usuario } });
             
-            // Notificar al otro si está conectado
             const socketOtro = Object.values(usuariosActivos).find(u => u.identificador === targetUser.identificador);
             if (socketOtro) io.to(socketOtro.id).emit('chat_creado', { sala: salaId, tipo: 'dm', nombre_chat: data.miNombre });
             
@@ -171,7 +204,8 @@ io.on('connection', (socket) => {
     if (estadoBloqueoSalas[sala] && !data.esAdmin) return;
     if (!data.msgId) data.msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
 
-    if ((data.tipo === 'foto' || data.tipo === 'audio') && data.contenido.startsWith('data:')) {
+    // SOPORTE PARA ARCHIVOS, AUDIOS Y FOTOS
+    if (['foto', 'audio', 'archivo'].includes(data.tipo) && data.contenido && data.contenido.startsWith('data:')) {
       data.contenido = await subirArchivoSupabase(data.contenido, data.tipo);
     }
 
@@ -184,7 +218,7 @@ io.on('connection', (socket) => {
     io.to(sala).emit('chat_message', data);
   });
 
-  // RESTO DE CÓDIGO WEBRTC, VOTACIONES Y BORRADOS IGUAL
+  // VOTAR ENCUESTA
   socket.on('votar_encuesta', async (data) => {
     const sala = socket.salaActual || 'global';
     try {
