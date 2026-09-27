@@ -1,6 +1,7 @@
 {
-  "name": "chat-cristal",
-  "version": "1.0.0",
+  "name": "chat-cristal-ultra",
+  "version": "2.0.0",
+  "description": "Chat WA Pro con identificadores y grupos directos",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
