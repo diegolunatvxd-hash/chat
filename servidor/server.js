@@ -45,12 +45,11 @@ io.on('connection', (socket) => {
   socket.on('autenticar_usuario', async (data, callback) => {
     const { usuario, password, identificador, color, foto, esAdminClave, esRegistro } = data;
 
-    // Invitado
     if (!password || password.trim() === '') {
       const nombreLimpio = usuario || 'Anónimo';
       return callback({
         exito: true,
-        perfil: { nombre: nombreLimpio, identificador: 'invitado_'+socket.id, color: color || '#005c4b', foto: foto || '', descripcion: 'Cuenta de invitado', esAdmin: false },
+        perfil: { nombre: nombreLimpio, identificador: 'invitado_'+socket.id, color: color || '#005c4b', foto: foto || '', banner: '', descripcion: 'Cuenta de invitado', esAdmin: false },
         misChats: [] 
       });
     }
@@ -70,7 +69,7 @@ io.on('connection', (socket) => {
         const nombreGuardar = usuario.replace('1234567890adminnn_', '');
 
         const { data: nuevoUser, error: errIns } = await supabase.from('usuarios').insert([{
-          usuario: nombreGuardar, password: password, identificador: identificador, color: color || '#005c4b', foto_perfil: fotoUrl || '', descripcion: '¡Hola! Estoy usando Chat Cristal.', es_admin: esAdmin
+          usuario: nombreGuardar, password: password, identificador: identificador, color: color || '#005c4b', foto_perfil: fotoUrl || '', banner_perfil: '', descripcion: '¡Hola! Estoy usando Chat Cristal.', es_admin: esAdmin
         }]).select().single();
 
         if (errIns) return callback({ exito: false, mensaje: 'Error al registrar usuario.' });
@@ -85,7 +84,7 @@ io.on('connection', (socket) => {
 
       return callback({
         exito: true,
-        perfil: { nombre: userLogueado.usuario, identificador: userLogueado.identificador, color: userLogueado.color, foto: userLogueado.foto_perfil, descripcion: userLogueado.descripcion, esAdmin: userLogueado.es_admin },
+        perfil: { nombre: userLogueado.usuario, identificador: userLogueado.identificador, color: userLogueado.color, foto: userLogueado.foto_perfil, banner: userLogueado.banner_perfil, descripcion: userLogueado.descripcion, esAdmin: userLogueado.es_admin },
         misChats: misChatsBD || []
       });
 
@@ -98,25 +97,30 @@ io.on('connection', (socket) => {
   // OBTENER PERFIL DE OTRO USUARIO
   socket.on('obtener_perfil_usuario', async (identificador, callback) => {
     try {
-        const { data } = await supabase.from('usuarios').select('usuario, identificador, foto_perfil, descripcion').eq('identificador', identificador).single();
+        const { data } = await supabase.from('usuarios').select('usuario, identificador, foto_perfil, banner_perfil, descripcion').eq('identificador', identificador).single();
         if (data) callback({ exito: true, perfil: data });
         else callback({ exito: false });
     } catch(e) { callback({ exito: false }); }
   });
 
-  // ACTUALIZAR MI PERFIL
+  // ACTUALIZAR MI PERFIL (FOTO, BANNER Y DESCRIPCIÓN)
   socket.on('actualizar_mi_perfil', async (data, callback) => {
       try {
           let fotoUrl = data.foto;
           if (fotoUrl && fotoUrl.startsWith('data:')) fotoUrl = await subirArchivoSupabase(fotoUrl, 'perfil');
+
+          let bannerUrl = data.banner;
+          if (bannerUrl && bannerUrl.startsWith('data:')) bannerUrl = await subirArchivoSupabase(bannerUrl, 'banner');
           
           let updateData = { usuario: data.nombre, descripcion: data.descripcion };
-          if(fotoUrl) updateData.foto_perfil = fotoUrl;
-          if(data.password) updateData.password = data.password;
+          if (fotoUrl) updateData.foto_perfil = fotoUrl;
+          if (bannerUrl !== null && bannerUrl !== undefined) updateData.banner_perfil = bannerUrl;
+          if (data.password) updateData.password = data.password;
 
           await supabase.from('usuarios').update(updateData).eq('identificador', data.identificador);
-          callback({ exito: true, fotoNueva: fotoUrl });
+          callback({ exito: true, fotoNueva: fotoUrl, bannerNuevo: bannerUrl });
       } catch(e) {
+          console.error(e);
           callback({ exito: false });
       }
   });
@@ -132,7 +136,7 @@ io.on('connection', (socket) => {
       } catch (e) { callback({ exito: false, mensaje: 'Error creando grupo' }); }
   });
 
-  // CREAR DM O AÑADIR A GRUPO EXISTENTE POR IDENTIFICADOR
+  // CREAR DM O AÑADIR A GRUPO EXISTENTE
   socket.on('crear_o_anadir_por_id', async (data, callback) => {
     try {
         const { data: targetUser } = await supabase.from('usuarios').select('*').eq('identificador', data.identificadorTarget).maybeSingle();
@@ -204,7 +208,6 @@ io.on('connection', (socket) => {
     if (estadoBloqueoSalas[sala] && !data.esAdmin) return;
     if (!data.msgId) data.msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
 
-    // SOPORTE PARA ARCHIVOS, AUDIOS Y FOTOS
     if (['foto', 'audio', 'archivo'].includes(data.tipo) && data.contenido && data.contenido.startsWith('data:')) {
       data.contenido = await subirArchivoSupabase(data.contenido, data.tipo);
     }
@@ -218,7 +221,6 @@ io.on('connection', (socket) => {
     io.to(sala).emit('chat_message', data);
   });
 
-  // VOTAR ENCUESTA
   socket.on('votar_encuesta', async (data) => {
     const sala = socket.salaActual || 'global';
     try {
@@ -240,17 +242,6 @@ io.on('connection', (socket) => {
     try { await supabase.from('mensajes').delete().eq('msg_id', data.msgId); io.to(sala).emit('mensaje_eliminado', { msgId: data.msgId }); } catch (e) {}
   });
 
-  socket.on('toggle_bloqueo', (data) => {
-    const sala = socket.salaActual || 'global';
-    estadoBloqueoSalas[sala] = !estadoBloqueoSalas[sala];
-    io.to(sala).emit('estado_bloqueo', { bloqueado: estadoBloqueoSalas[sala] });
-    io.to(sala).emit('chat_message', { tipo: 'sistema', msgId: 'sys_'+Date.now(), texto: estadoBloqueoSalas[sala] ? '🔒 Chat bloqueado.' : '🔓 Chat desbloqueado.' });
-  });
-
-  socket.on('obtener_usuarios', () => socket.emit('lista_usuarios', Object.values(usuariosActivos).filter(u => u.sala === socket.salaActual)));
-  socket.on('solicitar_llamada', (data) => { io.to(data.destinoId).emit('recibir_llamada', { emisorId: socket.id, emisorNombre: data.emisorNombre, conVideo: data.conVideo }); });
-  socket.on('responder_llamada', (data) => { io.to(data.destinoId).emit('respuesta_llamada', { aceptada: data.aceptada, emisorId: socket.id }); });
-  socket.on('webrtc_signal', (data) => { io.to(data.destinoId).emit('webrtc_signal', { emisorId: socket.id, signal: data.signal }); });
   socket.on('disconnect', () => { delete usuariosActivos[socket.id]; });
 });
 
